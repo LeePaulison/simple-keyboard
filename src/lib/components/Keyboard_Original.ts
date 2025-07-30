@@ -1,8 +1,8 @@
-import './css/Keyboard.css';
+import "./css/Keyboard.css";
 
-import { getDefaultLayout } from '../services/KeyboardLayout';
-import PhysicalKeyboard from '../services/PhysicalKeyboard';
-import Utilities from '../services/Utilities';
+import { getDefaultLayout } from "../services/KeyboardLayout";
+import PhysicalKeyboard from "../services/PhysicalKeyboard";
+import Utilities from "../services/Utilities";
 import {
   KeyboardOptions,
   KeyboardInput,
@@ -10,8 +10,8 @@ import {
   KeyboardHandlerEvent,
   KeyboardElement,
   SKWindow,
-} from '../interfaces';
-import CandidateBox from './CandidateBox';
+} from "../interfaces";
+import CandidateBox from "./CandidateBox";
 
 /**
  * Root class for simple-keyboard.
@@ -43,28 +43,24 @@ class SimpleKeyboard {
   initialized!: boolean;
   candidateBox!: CandidateBox | null;
   keyboardRowsDOM!: KeyboardElement;
-  defaultName = 'default';
+  defaultName = "default";
   activeInputElement: HTMLInputElement | HTMLTextAreaElement | null = null;
-  listenersAdded = false;
-  liveRegion: HTMLElement | null = null;
-  ariaLiveTimer: ReturnType<typeof setTimeout> | null = null;
-  handleKeyDownBound!: (event: KeyboardEvent) => void;
-  handleInternalKeyNavBound!: (event: KeyboardEvent) => void;
-  handleKeyUpBound!: (event: KeyboardEvent) => void;
-  handleMouseDownBound!: (event: MouseEvent) => void;
-  handleMouseUpBound!: (event: MouseEvent) => void;
-  handleTouchEndBound!: (event: TouchEvent) => void;
-  handleSelectBound!: (event: Event) => void;
-  handleSelectionChangeBound!: (event: Event) => void;
 
   /**
    * Creates an instance of SimpleKeyboard
    * @param {Array} selectorOrOptions If first parameter is a string, it is considered the container class. The second parameter is then considered the options object. If first parameter is an object, it is considered the options object.
    */
-  constructor(selectorOrOptions?: string | HTMLDivElement | KeyboardOptions, keyboardOptions?: KeyboardOptions) {
-    if (typeof window === 'undefined') return;
+  constructor(
+    selectorOrOptions?: string | HTMLDivElement | KeyboardOptions,
+    keyboardOptions?: KeyboardOptions
+  ) {
+    if (typeof window === "undefined") return;
 
-    const { keyboardDOMClass, keyboardDOM, options = {} } = this.handleParams(selectorOrOptions, keyboardOptions);
+    const {
+      keyboardDOMClass,
+      keyboardDOM,
+      options = {},
+    } = this.handleParams(selectorOrOptions, keyboardOptions);
 
     /**
      * Initializing Utilities
@@ -145,9 +141,9 @@ class SimpleKeyboard {
      * @property {boolean} clickOnMouseDown When useMouseEvents is enabled, this option allows you to trigger a button click event on mousedown
      */
     this.options = {
-      layoutName: 'default',
-      theme: 'hg-theme-default',
-      inputName: 'default',
+      layoutName: "default",
+      theme: "hg-theme-default",
+      inputName: "default",
       preventMouseDownDefault: false,
       enableLayoutCandidates: true,
       excludeFromLayout: {},
@@ -157,7 +153,7 @@ class SimpleKeyboard {
     /**
      * @type {object} Classes identifying loaded plugins
      */
-    this.keyboardPluginClasses = '';
+    this.keyboardPluginClasses = "";
 
     /**
      * Bindings
@@ -180,7 +176,7 @@ class SimpleKeyboard {
      */
     const { inputName = this.defaultName } = this.options;
     this.input = {};
-    this.input[inputName] = '';
+    this.input[inputName] = "";
 
     /**
      * @type {string} DOM class of the keyboard wrapper, normally "simple-keyboard" by default.
@@ -196,17 +192,19 @@ class SimpleKeyboard {
      * Simple-keyboard Instances
      * This enables multiple simple-keyboard support with easier management
      */
-    if (!(window as SKWindow)['SimpleKeyboardInstances']) (window as SKWindow)['SimpleKeyboardInstances'] = {};
+    if (!(window as SKWindow)["SimpleKeyboardInstances"])
+      (window as SKWindow)["SimpleKeyboardInstances"] = {};
 
     this.currentInstanceName = this.utilities.camelCase(this.keyboardDOMClass);
-    (window as SKWindow)['SimpleKeyboardInstances'][this.currentInstanceName] = this;
+    (window as SKWindow)["SimpleKeyboardInstances"][this.currentInstanceName] = this;
 
     /**
      * Instance vars
      */
-    this.allKeyboardInstances = (window as SKWindow)['SimpleKeyboardInstances'];
-    this.keyboardInstanceNames = Object.keys((window as SKWindow)['SimpleKeyboardInstances']);
-    this.isFirstKeyboardInstance = this.keyboardInstanceNames[0] === this.currentInstanceName;
+    this.allKeyboardInstances = (window as SKWindow)["SimpleKeyboardInstances"];
+    this.keyboardInstanceNames = Object.keys((window as SKWindow)["SimpleKeyboardInstances"]);
+    this.isFirstKeyboardInstance =
+      this.keyboardInstanceNames[0] === this.currentInstanceName;
 
     /**
      * Physical Keyboard support
@@ -232,7 +230,7 @@ class SimpleKeyboard {
     if (this.keyboardDOM) this.render();
     else {
       console.warn(`".${keyboardDOMClass}" was not found in the DOM.`);
-      throw new Error('KEYBOARD_DOM_ERROR');
+      throw new Error("KEYBOARD_DOM_ERROR");
     }
 
     /**
@@ -261,9 +259,11 @@ class SimpleKeyboard {
      * If first parameter is a string:
      * Consider it as an element's class
      */
-    if (typeof selectorOrOptions === 'string') {
-      keyboardDOMClass = selectorOrOptions.split('.').join('');
-      keyboardDOM = document.querySelector(`.${keyboardDOMClass}`) as KeyboardElement;
+    if (typeof selectorOrOptions === "string") {
+      keyboardDOMClass = selectorOrOptions.split(".").join("");
+      keyboardDOM = document.querySelector(
+        `.${keyboardDOMClass}`
+      ) as KeyboardElement;
       options = keyboardOptions;
 
       /**
@@ -275,11 +275,11 @@ class SimpleKeyboard {
        * This element must have a class, otherwise throw
        */
       if (!selectorOrOptions.className) {
-        console.warn('Any DOM element passed as parameter must have a class.');
-        throw new Error('KEYBOARD_DOM_CLASS_ERROR');
+        console.warn("Any DOM element passed as parameter must have a class.");
+        throw new Error("KEYBOARD_DOM_CLASS_ERROR");
       }
 
-      keyboardDOMClass = selectorOrOptions.className.split(' ')[0];
+      keyboardDOMClass = selectorOrOptions.className.split(" ")[0];
       keyboardDOM = selectorOrOptions;
       options = keyboardOptions;
 
@@ -287,8 +287,10 @@ class SimpleKeyboard {
        * Otherwise, search for .simple-keyboard DOM element
        */
     } else {
-      keyboardDOMClass = 'simple-keyboard';
-      keyboardDOM = document.querySelector(`.${keyboardDOMClass}`) as KeyboardElement;
+      keyboardDOMClass = "simple-keyboard";
+      keyboardDOM = document.querySelector(
+        `.${keyboardDOMClass}`
+      ) as KeyboardElement;
       options = selectorOrOptions;
     }
 
@@ -320,25 +322,35 @@ class SimpleKeyboard {
    * Retrieve the candidates for a given input
    * @param input The input string to check
    */
-  getInputCandidates(input: string): { candidateKey: string; candidateValue: string } | Record<string, never> {
-    const { layoutCandidates: layoutCandidatesObj, layoutCandidatesCaseSensitiveMatch } = this.options;
+  getInputCandidates(
+    input: string
+  ): { candidateKey: string; candidateValue: string } | Record<string, never> {
+    const {
+      layoutCandidates: layoutCandidatesObj,
+      layoutCandidatesCaseSensitiveMatch,
+    } = this.options;
 
-    if (!layoutCandidatesObj || typeof layoutCandidatesObj !== 'object') {
+    if (!layoutCandidatesObj || typeof layoutCandidatesObj !== "object") {
       return {};
     }
 
-    const layoutCandidates = Object.keys(layoutCandidatesObj).filter((layoutCandidate: string) => {
-      const inputSubstr = input.substring(0, this.getCaretPositionEnd() || 0) || input;
-      const regexp = new RegExp(
-        `${this.utilities.escapeRegex(layoutCandidate)}$`,
-        layoutCandidatesCaseSensitiveMatch ? 'g' : 'gi'
-      );
-      const matches = [...inputSubstr.matchAll(regexp)];
-      return !!matches.length;
-    });
+    const layoutCandidates = Object.keys(layoutCandidatesObj).filter(
+      (layoutCandidate: string) => {
+        const inputSubstr =
+          input.substring(0, this.getCaretPositionEnd() || 0) || input;
+        const regexp = new RegExp(
+          `${this.utilities.escapeRegex(layoutCandidate)}$`,
+          layoutCandidatesCaseSensitiveMatch ? "g" : "gi"
+        );
+        const matches = [...inputSubstr.matchAll(regexp)];
+        return !!matches.length;
+      }
+    );
 
     if (layoutCandidates.length > 1) {
-      const candidateKey = layoutCandidates.sort((a, b) => b.length - a.length)[0];
+      const candidateKey = layoutCandidates.sort(
+        (a, b) => b.length - a.length
+      )[0];
       return {
         candidateKey,
         candidateValue: layoutCandidatesObj[candidateKey],
@@ -359,44 +371,57 @@ class SimpleKeyboard {
    * @param candidates The chosen candidates string as defined in the layoutCandidates option
    * @param targetElement The element next to which the candidates box will be shown
    */
-  showCandidatesBox(candidateKey: string, candidateValue: string, targetElement: KeyboardElement): void {
+  showCandidatesBox(
+    candidateKey: string,
+    candidateValue: string,
+    targetElement: KeyboardElement
+  ): void {
     if (this.candidateBox) {
       this.candidateBox.show({
         candidateValue,
         targetElement,
         onSelect: (selectedCandidate: string, e: MouseEvent) => {
-          const { layoutCandidatesCaseSensitiveMatch, disableCandidateNormalization, enableLayoutCandidatesKeyPress } =
-            this.options;
+          const {
+            layoutCandidatesCaseSensitiveMatch,
+            disableCandidateNormalization,
+            enableLayoutCandidatesKeyPress
+          } = this.options;
 
           let candidateStr = selectedCandidate;
 
-          if (!disableCandidateNormalization) {
+          if(!disableCandidateNormalization) {
             /**
              * Making sure that our suggestions are not composed characters
              */
-            candidateStr = selectedCandidate.normalize('NFD');
+            candidateStr = selectedCandidate.normalize("NFD");
           }
 
           /**
            * Perform an action before any input change
            */
-          if (typeof this.options.beforeInputUpdate === 'function') {
+          if (typeof this.options.beforeInputUpdate === "function") {
             this.options.beforeInputUpdate(this);
           }
 
           const currentInput = this.getInput(this.options.inputName, true);
           const initialCaretPosition = this.getCaretPositionEnd() || 0;
-          const inputSubstr = currentInput.substring(0, initialCaretPosition || 0) || currentInput;
+          const inputSubstr =
+            currentInput.substring(0, initialCaretPosition || 0) ||
+            currentInput;
 
           const regexp = new RegExp(
             `${this.utilities.escapeRegex(candidateKey)}$`,
-            layoutCandidatesCaseSensitiveMatch ? 'g' : 'gi'
+            layoutCandidatesCaseSensitiveMatch ? "g" : "gi"
           );
-          const newInputSubstr = inputSubstr.replace(regexp, candidateStr);
+          const newInputSubstr = inputSubstr.replace(
+            regexp,
+            candidateStr
+          );
           const newInput = currentInput.replace(inputSubstr, newInputSubstr);
 
           const caretPositionDiff = newInputSubstr.length - inputSubstr.length;
-          let newCaretPosition = (initialCaretPosition || currentInput.length) + caretPositionDiff;
+          let newCaretPosition =
+            (initialCaretPosition || currentInput.length) + caretPositionDiff;
 
           if (newCaretPosition < 0) newCaretPosition = 0;
 
@@ -408,18 +433,20 @@ class SimpleKeyboard {
            * We pass in the composed candidate instead of the decomposed one
            * To prevent confusion for users
            */
-          if (enableLayoutCandidatesKeyPress && typeof this.options.onKeyPress === 'function') {
+          if (enableLayoutCandidatesKeyPress && typeof this.options.onKeyPress === "function")
             this.options.onKeyPress(selectedCandidate, e);
-          }
 
-          if (typeof this.options.onChange === 'function') {
-            this.options.onChange(this.getInput(this.options.inputName, true), e);
-          }
+          if (typeof this.options.onChange === "function")
+            this.options.onChange(
+              this.getInput(this.options.inputName, true),
+              e
+            );
 
           /**
            * Calling onChangeAll
            */
-          if (typeof this.options.onChangeAll === 'function') this.options.onChangeAll(this.getAllInputs(), e);
+          if (typeof this.options.onChangeAll === "function")
+            this.options.onChangeAll(this.getAllInputs(), e);
         },
       });
     }
@@ -434,17 +461,17 @@ class SimpleKeyboard {
     /**
      * Ignoring placeholder buttons
      */
-    if (button === '{//}') return;
+    if (button === "{//}") return;
 
     /**
      * Creating inputName if it doesn't exist
      */
-    if (!this.input[inputName]) this.input[inputName] = '';
+    if (!this.input[inputName]) this.input[inputName] = "";
 
     /**
      * Perform an action before any input change
      */
-    if (typeof this.options.beforeInputUpdate === 'function') {
+    if (typeof this.options.beforeInputUpdate === "function") {
       this.options.beforeInputUpdate(this);
     }
 
@@ -469,9 +496,9 @@ class SimpleKeyboard {
         this.caretPositionEnd === updatedInput.length;
 
       if (isEntireInputSelection) {
-        this.setInput('', this.options.inputName, true);
+        this.setInput("", this.options.inputName, true);
         this.setCaretPosition(0);
-        this.activeInputElement.value = '';
+        this.activeInputElement.value = "";
         this.activeInputElement.setSelectionRange(0, 0);
         this.handleButtonClicked(button, e);
         return;
@@ -481,7 +508,8 @@ class SimpleKeyboard {
     /**
      * Calling onKeyPress
      */
-    if (typeof this.options.onKeyPress === 'function') this.options.onKeyPress(button, e);
+    if (typeof this.options.onKeyPress === "function")
+      this.options.onKeyPress(button, e);
 
     if (
       // If input will change as a result of this button press
@@ -495,7 +523,10 @@ class SimpleKeyboard {
       /**
        * If maxLength and handleMaxLength yield true, halting
        */
-      if (this.options.maxLength && this.utilities.handleMaxLength(this.input, updatedInput)) {
+      if (
+        this.options.maxLength &&
+        this.utilities.handleMaxLength(this.input, updatedInput)
+      ) {
         return;
       }
 
@@ -512,11 +543,11 @@ class SimpleKeyboard {
 
       this.setInput(newInputValue, this.options.inputName, true);
 
-      if (debug) console.log('Input changed:', this.getAllInputs());
+      if (debug) console.log("Input changed:", this.getAllInputs());
 
       if (this.options.debug) {
         console.log(
-          'Caret at: ',
+          "Caret at: ",
           this.getCaretPosition(),
           this.getCaretPositionEnd(),
           `(${this.keyboardDOMClass})`,
@@ -532,22 +563,28 @@ class SimpleKeyboard {
       /**
        * Calling onChange
        */
-      if (typeof this.options.onChange === 'function')
+      if (typeof this.options.onChange === "function")
         this.options.onChange(this.getInput(this.options.inputName, true), e);
 
       /**
        * Calling onChangeAll
        */
-      if (typeof this.options.onChangeAll === 'function') this.options.onChangeAll(this.getAllInputs(), e);
+      if (typeof this.options.onChangeAll === "function")
+        this.options.onChangeAll(this.getAllInputs(), e);
 
       /**
        * Check if this new input has candidates (suggested words)
        */
       if (e?.target && this.options.enableLayoutCandidates) {
-        const { candidateKey, candidateValue } = this.getInputCandidates(updatedInput);
+        const { candidateKey, candidateValue } =
+          this.getInputCandidates(updatedInput);
 
         if (candidateKey && candidateValue) {
-          this.showCandidatesBox(candidateKey, candidateValue, this.keyboardDOM);
+          this.showCandidatesBox(
+            candidateKey,
+            candidateValue,
+            this.keyboardDOM
+          );
         } else {
           this.candidateBox?.destroy();
         }
@@ -558,20 +595,20 @@ class SimpleKeyboard {
      * After a button is clicked the selection (if any) will disappear
      * we should reflect this in our state, as applicable
      */
-    if (this.caretPositionEnd && this.caretPosition !== this.caretPositionEnd) {
+    if(this.caretPositionEnd && this.caretPosition !== this.caretPositionEnd){
       this.setCaretPosition(this.caretPositionEnd, this.caretPositionEnd);
 
-      if (this.activeInputElement) {
+      if(this.activeInputElement){
         this.activeInputElement.setSelectionRange(this.caretPositionEnd, this.caretPositionEnd);
       }
-
-      if (this.options.debug) {
-        console.log('Caret position aligned', this.caretPosition);
+      
+      if(this.options.debug){
+        console.log("Caret position aligned", this.caretPosition);
       }
     }
 
     if (debug) {
-      console.log('Key pressed:', button);
+      console.log("Key pressed:", button);
     }
   }
 
@@ -629,18 +666,18 @@ class SimpleKeyboard {
         if (
           (this.getMouseHold() &&
             // TODO: This needs to be configurable through options
-            ((!button.includes('{') && !button.includes('}')) ||
-              button === '{delete}' ||
-              button === '{backspace}' ||
-              button === '{bksp}' ||
-              button === '{space}' ||
-              button === '{tab}')) ||
-          button === '{arrowright}' ||
-          button === '{arrowleft}' ||
-          button === '{arrowup}' ||
-          button === '{arrowdown}'
+            ((!button.includes("{") && !button.includes("}")) ||
+              button === "{delete}" ||
+              button === "{backspace}" ||
+              button === "{bksp}" ||
+              button === "{space}" ||
+              button === "{tab}")) ||
+          button === "{arrowright}" ||
+          button === "{arrowleft}" ||
+          button === "{arrowup}" ||
+          button === "{arrowdown}"
         ) {
-          if (this.options.debug) console.log('Button held:', button);
+          if (this.options.debug) console.log("Button held:", button);
 
           this.handleButtonHold(button);
         }
@@ -657,8 +694,10 @@ class SimpleKeyboard {
       /**
        * Handle event options
        */
-      if (this.options.preventMouseUpDefault && e.preventDefault) e.preventDefault();
-      if (this.options.stopMouseUpPropagation && e.stopPropagation) e.stopPropagation();
+      if (this.options.preventMouseUpDefault && e.preventDefault)
+        e.preventDefault();
+      if (this.options.stopMouseUpPropagation && e.stopPropagation)
+        e.stopPropagation();
 
       /* istanbul ignore next */
       const isKeyboard =
@@ -667,7 +706,8 @@ class SimpleKeyboard {
         (this.candidateBox &&
           this.candidateBox.candidateBoxElement &&
           (e.target === this.candidateBox.candidateBoxElement ||
-            (e.target && this.candidateBox.candidateBoxElement.contains(e.target))));
+            (e.target &&
+              this.candidateBox.candidateBoxElement.contains(e.target))));
 
       /**
        * On click outside, remove candidateBox
@@ -690,7 +730,8 @@ class SimpleKeyboard {
     /**
      * Calling onKeyReleased
      */
-    if (button && typeof this.options.onKeyReleased === 'function') this.options.onKeyReleased(button, e);
+    if (button && typeof this.options.onKeyReleased === "function")
+      this.options.onKeyReleased(button, e);
   }
 
   /**
@@ -737,8 +778,10 @@ class SimpleKeyboard {
    * Clear the keyboard’s input.
    * @param {string} [inputName] optional - the internal input to select
    */
-  clearInput(inputName: string = this.options.inputName || this.defaultName): void {
-    this.input[inputName] = '';
+  clearInput(
+    inputName: string = this.options.inputName || this.defaultName
+  ): void {
+    this.input[inputName] = "";
 
     /**
      * Reset caretPosition
@@ -755,7 +798,10 @@ class SimpleKeyboard {
    * Get the keyboard’s input (You can also get it from the onChange prop).
    * @param  {string} [inputName] optional - the internal input to select
    */
-  getInput(inputName: string = this.options.inputName || this.defaultName, skipSync = false): string {
+  getInput(
+    inputName: string = this.options.inputName || this.defaultName,
+    skipSync = false
+  ): string {
     /**
      * Enforce syncInstanceInputs, if set
      */
@@ -763,9 +809,11 @@ class SimpleKeyboard {
 
     if (this.options.rtl) {
       // Remove existing control chars
-      const inputWithoutRTLControl = this.input[inputName].replace('\u202B', '').replace('\u202C', '');
+      const inputWithoutRTLControl = this.input[inputName]
+        .replace("\u202B", "")
+        .replace("\u202C", "");
 
-      return '\u202B' + inputWithoutRTLControl + '\u202C';
+      return "\u202B" + inputWithoutRTLControl + "\u202C";
     } else {
       return this.input[inputName];
     }
@@ -790,7 +838,11 @@ class SimpleKeyboard {
    * @param  {string} input the input value
    * @param  {string} inputName optional - the internal input to select
    */
-  setInput(input: string, inputName: string = this.options.inputName || this.defaultName, skipSync?: boolean): void {
+  setInput(
+    input: string,
+    inputName: string = this.options.inputName || this.defaultName,
+    skipSync?: boolean
+  ): void {
     this.input[inputName] = input;
 
     /**
@@ -817,7 +869,7 @@ class SimpleKeyboard {
 
     if (changedOptions.length) {
       if (this.options.debug) {
-        console.log('changedOptions', changedOptions);
+        console.log("changedOptions", changedOptions);
       }
 
       /**
@@ -838,7 +890,9 @@ class SimpleKeyboard {
    */
   changedOptions(newOptions: Partial<KeyboardOptions>): string[] {
     return Object.keys(newOptions).filter(
-      (optionName) => JSON.stringify(newOptions[optionName]) !== JSON.stringify(this.options[optionName])
+      (optionName) =>
+        JSON.stringify(newOptions[optionName]) !==
+        JSON.stringify(this.options[optionName])
     );
   }
 
@@ -850,7 +904,7 @@ class SimpleKeyboard {
     /**
      * Changed: layoutName
      */
-    if (changedOptions.includes('layoutName')) {
+    if (changedOptions.includes("layoutName")) {
       /**
        * Reset candidateBox
        */
@@ -862,7 +916,10 @@ class SimpleKeyboard {
     /**
      * Changed: layoutCandidatesPageSize, layoutCandidates
      */
-    if (changedOptions.includes('layoutCandidatesPageSize') || changedOptions.includes('layoutCandidates')) {
+    if (
+      changedOptions.includes("layoutCandidatesPageSize") ||
+      changedOptions.includes("layoutCandidates")
+    ) {
       /**
        * Reset and recreate candidateBox
        */
@@ -886,7 +943,7 @@ class SimpleKeyboard {
     }
 
     this.keyboardDOM.className = this.keyboardDOMClass;
-    this.keyboardDOM.setAttribute('data-skInstance', this.currentInstanceName);
+    this.keyboardDOM.setAttribute("data-skInstance", this.currentInstanceName);
     this.buttonElements = {};
   }
 
@@ -896,13 +953,15 @@ class SimpleKeyboard {
    */
   // eslint-disable-next-line no-unused-vars
   dispatch(callback: (instance: SimpleKeyboard, key?: string) => void): void {
-    if (!(window as SKWindow)['SimpleKeyboardInstances']) {
-      console.warn(`SimpleKeyboardInstances is not defined. Dispatch cannot be called.`);
-      throw new Error('INSTANCES_VAR_ERROR');
+    if (!(window as SKWindow)["SimpleKeyboardInstances"]) {
+      console.warn(
+        `SimpleKeyboardInstances is not defined. Dispatch cannot be called.`
+      );
+      throw new Error("INSTANCES_VAR_ERROR");
     }
 
-    return Object.keys((window as SKWindow)['SimpleKeyboardInstances']).forEach((key) => {
-      callback((window as SKWindow)['SimpleKeyboardInstances'][key], key);
+    return Object.keys((window as SKWindow)["SimpleKeyboardInstances"]).forEach((key) => {
+      callback((window as SKWindow)["SimpleKeyboardInstances"][key], key);
     });
   }
 
@@ -914,8 +973,8 @@ class SimpleKeyboard {
   addButtonTheme(buttons: string, className: string): void {
     if (!className || !buttons) return;
 
-    buttons.split(' ').forEach((button) => {
-      className.split(' ').forEach((classNameItem) => {
+    buttons.split(" ").forEach((button) => {
+      className.split(" ").forEach((classNameItem) => {
         if (!this.options.buttonTheme) this.options.buttonTheme = [];
 
         let classNameFound = false;
@@ -924,14 +983,14 @@ class SimpleKeyboard {
          * If class is already defined, we add button to class definition
          */
         this.options.buttonTheme.map((buttonTheme) => {
-          if (buttonTheme?.class.split(' ').includes(classNameItem)) {
+          if (buttonTheme?.class.split(" ").includes(classNameItem)) {
             classNameFound = true;
 
-            const buttonThemeArray = buttonTheme.buttons.split(' ');
+            const buttonThemeArray = buttonTheme.buttons.split(" ");
             if (!buttonThemeArray.includes(button)) {
               classNameFound = true;
               buttonThemeArray.push(button);
-              buttonTheme.buttons = buttonThemeArray.join(' ');
+              buttonTheme.buttons = buttonThemeArray.join(" ");
             }
           }
           return buttonTheme;
@@ -970,22 +1029,33 @@ class SimpleKeyboard {
     /**
      * If buttons are passed and buttonTheme has items
      */
-    if (buttons && Array.isArray(this.options.buttonTheme) && this.options.buttonTheme.length) {
-      const buttonArray = buttons.split(' ');
+    if (
+      buttons &&
+      Array.isArray(this.options.buttonTheme) &&
+      this.options.buttonTheme.length
+    ) {
+      const buttonArray = buttons.split(" ");
       buttonArray.forEach((button) => {
         this.options?.buttonTheme?.map((buttonTheme, index) => {
           /**
            * If className is set, we affect the buttons only for that class
            * Otherwise, we afect all classes
            */
-          if ((buttonTheme && className && className.includes(buttonTheme.class)) || !className) {
-            const filteredButtonArray = buttonTheme?.buttons.split(' ').filter((item) => item !== button);
+          if (
+            (buttonTheme &&
+              className &&
+              className.includes(buttonTheme.class)) ||
+            !className
+          ) {
+            const filteredButtonArray = buttonTheme?.buttons
+              .split(" ")
+              .filter((item) => item !== button);
 
             /**
              * If buttons left, return them, otherwise, remove button Theme
              */
             if (buttonTheme && filteredButtonArray?.length) {
-              buttonTheme.buttons = filteredButtonArray.join(' ');
+              buttonTheme.buttons = filteredButtonArray.join(" ");
             } else {
               this.options.buttonTheme?.splice(index, 1);
               buttonTheme = null;
@@ -1004,7 +1074,9 @@ class SimpleKeyboard {
    * Get the DOM Element of a button. If there are several buttons with the same name, an array of the DOM Elements is returned.
    * @param  {string} button The button layout name to select
    */
-  getButtonElement(button: string): KeyboardElement | KeyboardElement[] | undefined {
+  getButtonElement(
+    button: string
+  ): KeyboardElement | KeyboardElement[] | undefined {
     let output;
 
     const buttonArr = this.buttonElements[button];
@@ -1033,14 +1105,19 @@ class SimpleKeyboard {
     if (inputPatternRaw instanceof RegExp) {
       inputPattern = inputPatternRaw;
     } else {
-      inputPattern = inputPatternRaw[this.options.inputName || this.defaultName];
+      inputPattern =
+        inputPatternRaw[this.options.inputName || this.defaultName];
     }
 
     if (inputPattern && inputVal) {
       const didInputMatch = inputPattern.test(inputVal);
 
       if (this.options.debug) {
-        console.log(`inputPattern ("${inputPattern}"): ${didInputMatch ? 'passed' : 'did not pass!'}`);
+        console.log(
+          `inputPattern ("${inputPattern}"): ${
+            didInputMatch ? "passed" : "did not pass!"
+          }`
+        );
       }
 
       return didInputMatch;
@@ -1053,26 +1130,6 @@ class SimpleKeyboard {
   }
 
   /**
-   * Handles the removal of event listers before initializing new ones
-   * This is useful when changing options that require a fresh set of event listeners
-   */
-
-  removeEventListeners(): void {
-    console.log('Removing event listeners...');
-
-    document.removeEventListener('keydown', this.handleKeyDownBound);
-    document.removeEventListener('keyup', this.handleKeyUpBound);
-    document.removeEventListener('mouseup', this.handleMouseUpBound);
-    document.removeEventListener('touchend', this.handleTouchEndBound);
-    document.removeEventListener('select', this.handleSelectBound);
-
-    if (this.options.updateCaretOnSelectionChange) {
-      document.removeEventListener('selectionchange', this.handleSelectionChangeBound);
-    }
-
-    this.listenersAdded = false; // Allow re-adding if necessary
-  }
-  /**
    * Handles simple-keyboard event listeners
    */
   setEventListeners(): void {
@@ -1084,39 +1141,21 @@ class SimpleKeyboard {
         console.log(`Caret handling started (${this.keyboardDOMClass})`);
       }
 
-      // LPJr: Prevent duplicate listeners
-      if (this.listenersAdded) {
-        console.log('Event listeners already set. Skipping...');
-        return;
-      }
+      const { physicalKeyboardHighlightPreventDefault = false } = this.options;
 
-      // Ensure existing listeners are removed before adding new ones
-      this.removeEventListeners();
-
-      // LPJr: added named event handlers instead of anonymous functions
-      this.handleKeyDownBound = this.handleKeyDown.bind(this);
-      this.handleInternalKeyNavBound = this.handleInternalKeyNav.bind(this);
-      this.keyboardDOM.addEventListener('keydown', this.handleInternalKeyNavBound as EventListener);
-
-      this.handleKeyUpBound = this.handleKeyUp.bind(this);
-      this.handleMouseUpBound = this.handleMouseUp.bind(this);
-      this.handleTouchEndBound = () => this.handleTouchEnd(this);
-      this.handleSelectBound = () => this.handleSelect(this);
-      this.handleSelectionChangeBound = this.handleSelectionChange.bind(this);
-
-      document.addEventListener('keydown', this.handleKeyDownBound);
-      document.addEventListener('keyup', this.handleKeyUpBound);
-      document.addEventListener('mouseup', this.handleMouseUpBound);
-      document.addEventListener('touchend', this.handleTouchEndBound);
+      /**
+       * Event Listeners
+       */
+      document.addEventListener("keyup", this.handleKeyUp, physicalKeyboardHighlightPreventDefault);
+      document.addEventListener("keydown", this.handleKeyDown, physicalKeyboardHighlightPreventDefault);
+      document.addEventListener("mouseup", this.handleMouseUp);
+      document.addEventListener("touchend", this.handleTouchEnd);
 
       if (this.options.updateCaretOnSelectionChange) {
-        document.addEventListener('selectionchange', this.handleSelectionChangeBound);
+        document.addEventListener("selectionchange", this.handleSelectionChange);
       }
 
-      document.addEventListener('select', this.handleSelectBound);
-
-      // Mark listeners as added to prevent duplicates
-      this.listenersAdded = true;
+      document.addEventListener("select", this.handleSelect);
     }
   }
 
@@ -1124,10 +1163,6 @@ class SimpleKeyboard {
    * Event Handler: KeyUp
    */
   handleKeyUp(event: KeyboardHandlerEvent): void {
-    if (this.options.physicalKeyboardHighlightPreventDefault) {
-      event.preventDefault();
-    }
-
     this.caretEventHandler(event);
 
     if (this.options.physicalKeyboardHighlight) {
@@ -1139,121 +1174,9 @@ class SimpleKeyboard {
    * Event Handler: KeyDown
    */
   handleKeyDown(event: KeyboardHandlerEvent): void {
-    if (this.options.physicalKeyboardHighlightPreventDefault) {
-      event.preventDefault();
-    }
-
     if (this.options.physicalKeyboardHighlight) {
       this.physicalKeyboard.handleHighlightKeyDown(event);
     }
-
-    if (!(event instanceof KeyboardEvent)) return;
-    this.getButtonAndAnnounce(event);
-  }
-
-  /**
-   * Get the Button Element for Live Region announcements
-   */
-  getButtonAndAnnounce(event: KeyboardEvent): void {
-    if (!(event instanceof KeyboardEvent)) return;
-
-    const buttonEl = event.target as KeyboardElement;
-    const label = buttonEl.getAttribute('aria-label') || buttonEl.textContent || 'Unknown Key';
-    this.announceLiveRegion(label);
-  }
-
-  /**
-   * WCAG 2.1 Live Region for announcing key focus changes
-   * This is used to announce key focus changes for screen readers
-   */
-
-  announceLiveRegion(keyLabel: string, context = 'pressed'): void {
-    if (!this.options.useLiveRegion || !this.liveRegion) return;
-
-    if (this.ariaLiveTimer) clearTimeout(this.ariaLiveTimer);
-
-    this.ariaLiveTimer = setTimeout(() => {
-      if (this.liveRegion) {
-        this.liveRegion.textContent = '';
-        requestAnimationFrame(() => {
-          if (this.liveRegion) {
-            this.liveRegion.textContent = `Key ${keyLabel} ${context}`;
-          }
-        });
-      }
-    }, 100);
-  }
-
-  /**
-   * Event Handler: Internal Key Navigation
-   */
-  handleInternalKeyNav(event: KeyboardEvent): void {
-    if (!(event instanceof KeyboardEvent)) return;
-
-    const { key } = event;
-
-    if (!['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(key)) return;
-
-    event.preventDefault();
-
-    const focused = document.activeElement as HTMLElement;
-
-    // Find the currently focused button
-    if (!focused || !focused.hasAttribute('data-skBtn')) return;
-
-    // Implement directional logic
-    let nextButton: HTMLElement | null = null;
-
-    switch (key) {
-      case 'ArrowRight':
-        nextButton = this.findNextButton(focused);
-        break;
-      case 'ArrowLeft':
-        nextButton = this.findPreviousButton(focused);
-        break;
-      // Optional:
-      // case 'ArrowDown': ...
-      // case 'ArrowUp': ...
-    }
-
-    if (nextButton) {
-      focused.setAttribute('tabindex', '-1');
-      nextButton.setAttribute('tabindex', '0');
-      nextButton.focus();
-
-      if (this.options.useLiveRegion && this.liveRegion) {
-        const label = nextButton.getAttribute('aria-label') || nextButton.textContent || '';
-        // Clear previous aria live message
-        if (this.ariaLiveTimer !== null) {
-          clearTimeout(this.ariaLiveTimer);
-        }
-        this.ariaLiveTimer = setTimeout(() => {
-          if (this.options.useLiveRegion && this.liveRegion) {
-            this.liveRegion.textContent = `Key ${label} focused`;
-          }
-        }, this.options.liveRegionDelay || 100);
-      }
-    }
-  }
-
-  /**
-   * Find the next button in the keyboard layout
-   */
-  findNextButton(current: HTMLElement): HTMLElement | null {
-    const allButtons = Array.from(this.keyboardDOM.querySelectorAll('[data-skBtn]')) as HTMLElement[];
-
-    const idx = allButtons.indexOf(current);
-    return allButtons[idx + 1] || null;
-  }
-
-  /**
-   * Find the previous button in the keyboard layout
-   */
-  findPreviousButton(current: HTMLElement): HTMLElement | null {
-    const allButtons = Array.from(this.keyboardDOM.querySelectorAll('[data-skBtn]')) as HTMLElement[];
-
-    const idx = allButtons.indexOf(current);
-    return allButtons[idx - 1] || null;
   }
 
   /**
@@ -1261,9 +1184,6 @@ class SimpleKeyboard {
    */
   handleMouseUp(event: KeyboardHandlerEvent): void {
     this.caretEventHandler(event);
-
-    if (!(event instanceof KeyboardEvent)) return;
-    this.getButtonAndAnnounce(event);
   }
 
   /**
@@ -1272,9 +1192,6 @@ class SimpleKeyboard {
   /* istanbul ignore next */
   handleTouchEnd(event: KeyboardHandlerEvent): void {
     this.caretEventHandler(event);
-
-    if (!(event instanceof KeyboardEvent)) return;
-    this.getButtonAndAnnounce(event);
   }
 
   /**
@@ -1294,7 +1211,7 @@ class SimpleKeyboard {
      * Firefox is not reporting the correct caret position through this event
      * https://github.com/hodgef/simple-keyboard/issues/1839
      */
-    if (navigator.userAgent.includes('Firefox')) {
+    if(navigator.userAgent.includes('Firefox')){
       return;
     }
     this.caretEventHandler(event);
@@ -1311,19 +1228,25 @@ class SimpleKeyboard {
 
     this.dispatch((instance) => {
       let isKeyboard =
-        event.target === instance.keyboardDOM || (event.target && instance.keyboardDOM.contains(event.target));
+        event.target === instance.keyboardDOM ||
+        (event.target && instance.keyboardDOM.contains(event.target));
 
       /**
        * If syncInstanceInputs option is enabled, make isKeyboard match any instance
        * not just the current one
        */
       if (this.options.syncInstanceInputs && Array.isArray(event.path)) {
-        isKeyboard = event.path.some((item: HTMLElement) => item?.hasAttribute?.('data-skInstance'));
+        isKeyboard = event.path.some((item: HTMLElement) =>
+          item?.hasAttribute?.("data-skInstance")
+        );
       }
 
       if (
-        (targetTagName === 'textarea' ||
-          (targetTagName === 'input' && ['text', 'search', 'url', 'tel', 'password'].includes(event.target.type))) &&
+        (targetTagName === "textarea" ||
+          (targetTagName === "input" &&
+            ["text", "search", "url", "tel", "password"].includes(
+              event.target.type
+            ))) &&
         !instance.options.disableCaretPositioning
       ) {
         /**
@@ -1333,7 +1256,7 @@ class SimpleKeyboard {
         let selectionStart = event.target.selectionStart;
         let selectionEnd = event.target.selectionEnd;
 
-        if (instance.options.rtl) {
+        if(instance.options.rtl){
           selectionStart = instance.utilities.getRtlOffset(selectionStart, instance.getInput());
           selectionEnd = instance.utilities.getRtlOffset(selectionEnd, instance.getInput());
         }
@@ -1347,7 +1270,7 @@ class SimpleKeyboard {
 
         if (instance.options.debug) {
           console.log(
-            'Caret at: ',
+            "Caret at: ",
             instance.getCaretPosition(),
             instance.getCaretPositionEnd(),
             event && event.target.tagName.toLowerCase(),
@@ -1355,7 +1278,10 @@ class SimpleKeyboard {
             event?.type
           );
         }
-      } else if ((instance.options.disableCaretPositioning || !isKeyboard) && event?.type !== 'selectionchange') {
+      } else if (
+        (instance.options.disableCaretPositioning || !isKeyboard) &&
+        event?.type !== "selectionchange"
+      ) {
         /**
          * If we toggled off disableCaretPositioning, we must ensure caretPosition doesn't persist once reactivated.
          */
@@ -1367,7 +1293,10 @@ class SimpleKeyboard {
         instance.activeInputElement = null;
 
         if (instance.options.debug) {
-          console.log(`Caret position reset due to "${event?.type}" event`, event);
+          console.log(
+            `Caret position reset due to "${event?.type}" event`,
+            event
+          );
         }
       }
     });
@@ -1379,30 +1308,35 @@ class SimpleKeyboard {
   recurseButtons(fn: any): void {
     if (!fn) return;
 
-    Object.keys(this.buttonElements).forEach((buttonName) => this.buttonElements[buttonName].forEach(fn));
+    Object.keys(this.buttonElements).forEach((buttonName) =>
+      this.buttonElements[buttonName].forEach(fn)
+    );
   }
 
   /**
    * Destroy keyboard listeners and DOM elements
    */
   destroy(): void {
-    if (this.options.debug) console.log(`Destroying simple-keyboard instance: ${this.currentInstanceName}`);
+    if (this.options.debug)
+      console.log(
+        `Destroying simple-keyboard instance: ${this.currentInstanceName}`
+      );
 
     const { physicalKeyboardHighlightPreventDefault = false } = this.options;
 
     /**
      * Remove document listeners
      */
-    document.removeEventListener('keyup', this.handleKeyUpBound);
-    document.removeEventListener('keydown', this.handleKeyDownBound);
-    document.removeEventListener('mouseup', this.handleMouseUpBound);
-    document.removeEventListener('touchend', this.handleTouchEndBound);
-    document.removeEventListener('select', this.handleSelectBound);
+    document.removeEventListener("keyup", this.handleKeyUp, physicalKeyboardHighlightPreventDefault);
+    document.removeEventListener("keydown", this.handleKeyDown, physicalKeyboardHighlightPreventDefault);
+    document.removeEventListener("mouseup", this.handleMouseUp);
+    document.removeEventListener("touchend", this.handleTouchEnd);
+    document.removeEventListener("select", this.handleSelect);
 
     // selectionchange is causing caret update issues on Chrome
     // https://github.com/hodgef/simple-keyboard/issues/2346
     if (this.options.updateCaretOnSelectionChange) {
-      document.removeEventListener('selectionchange', this.handleSelectionChangeBound);
+      document.removeEventListener("selectionchange", this.handleSelectionChange);
     }
 
     document.onpointerup = null;
@@ -1460,18 +1394,18 @@ class SimpleKeyboard {
     /**
      * Removing instance attribute
      */
-    this.keyboardDOM.removeAttribute('data-skInstance');
+    this.keyboardDOM.removeAttribute("data-skInstance");
 
     /**
      * Clearing keyboardDOM
      */
-    this.keyboardDOM.innerHTML = '';
+    this.keyboardDOM.innerHTML = "";
 
     /**
      * Remove instance
      */
-    (window as SKWindow)['SimpleKeyboardInstances'][this.currentInstanceName] = null;
-    delete (window as SKWindow)['SimpleKeyboardInstances'][this.currentInstanceName];
+    (window as SKWindow)["SimpleKeyboardInstances"][this.currentInstanceName] = null;
+    delete (window as SKWindow)["SimpleKeyboardInstances"][this.currentInstanceName];
 
     /**
      * Reset initialized flag
@@ -1491,18 +1425,21 @@ class SimpleKeyboard {
         if (
           themeObj &&
           themeObj.class &&
-          typeof themeObj.class === 'string' &&
+          typeof themeObj.class === "string" &&
           themeObj.buttons &&
-          typeof themeObj.buttons === 'string'
+          typeof themeObj.buttons === "string"
         ) {
-          const themeObjClasses = themeObj.class.split(' ');
-          const themeObjButtons = themeObj.buttons.split(' ');
+          const themeObjClasses = themeObj.class.split(" ");
+          const themeObjButtons = themeObj.buttons.split(" ");
 
           if (themeObjButtons.includes(button)) {
             buttonClasses = [...buttonClasses, ...themeObjClasses];
           }
         } else {
-          console.warn(`Incorrect "buttonTheme". Please check the documentation.`, themeObj);
+          console.warn(
+            `Incorrect "buttonTheme". Please check the documentation.`,
+            themeObj
+          );
         }
       });
     }
@@ -1520,19 +1457,22 @@ class SimpleKeyboard {
       buttonAttributes.forEach((attrObj) => {
         if (
           attrObj.attribute &&
-          typeof attrObj.attribute === 'string' &&
+          typeof attrObj.attribute === "string" &&
           attrObj.value &&
-          typeof attrObj.value === 'string' &&
+          typeof attrObj.value === "string" &&
           attrObj.buttons &&
-          typeof attrObj.buttons === 'string'
+          typeof attrObj.buttons === "string"
         ) {
-          const attrObjButtons = attrObj.buttons.split(' ');
+          const attrObjButtons = attrObj.buttons.split(" ");
 
           if (attrObjButtons.includes(button)) {
             callback(attrObj.attribute, attrObj.value);
           }
         } else {
-          console.warn(`Incorrect "buttonAttributes". Please check the documentation.`, attrObj);
+          console.warn(
+            `Incorrect "buttonAttributes". Please check the documentation.`,
+            attrObj
+          );
         }
       });
     }
@@ -1556,7 +1496,7 @@ class SimpleKeyboard {
   /* istanbul ignore next */
   disableContextualWindow() {
     window.oncontextmenu = (event: KeyboardHandlerEvent) => {
-      if (event.target.classList.contains('hg-button')) {
+      if (event.target.classList?.contains("hg-button")) {
         event.preventDefault();
         event.stopPropagation();
         return false;
@@ -1572,7 +1512,9 @@ class SimpleKeyboard {
       this.options.useTouchEvents = true;
 
       if (this.options.debug) {
-        console.log(`autoUseTouchEvents: Touch device detected, useTouchEvents enabled.`);
+        console.log(
+          `autoUseTouchEvents: Touch device detected, useTouchEvents enabled.`
+        );
       }
     }
   }
@@ -1590,7 +1532,7 @@ class SimpleKeyboard {
      */
     this.setEventListeners();
 
-    if (typeof this.options.onInit === 'function') this.options.onInit(this);
+    if (typeof this.options.onInit === "function") this.options.onInit(this);
   }
 
   /**
@@ -1604,7 +1546,8 @@ class SimpleKeyboard {
       this.onTouchDeviceDetected();
     }
 
-    if (typeof this.options.beforeFirstRender === 'function') this.options.beforeFirstRender(this);
+    if (typeof this.options.beforeFirstRender === "function")
+      this.options.beforeFirstRender(this);
 
     /**
      * Notify about PointerEvents usage
@@ -1616,7 +1559,7 @@ class SimpleKeyboard {
       !this.options.useMouseEvents
     ) {
       if (this.options.debug) {
-        console.log('Using PointerEvents as it is supported by this browser');
+        console.log("Using PointerEvents as it is supported by this browser");
       }
     }
 
@@ -1625,7 +1568,9 @@ class SimpleKeyboard {
      */
     if (this.options.useTouchEvents) {
       if (this.options.debug) {
-        console.log('useTouchEvents has been enabled. Only touch events will be used.');
+        console.log(
+          "useTouchEvents has been enabled. Only touch events will be used."
+        );
       }
     }
   }
@@ -1634,21 +1579,24 @@ class SimpleKeyboard {
    * Executes the callback function before a simple-keyboard render.
    */
   beforeRender() {
-    if (typeof this.options.beforeRender === 'function') this.options.beforeRender(this);
+    if (typeof this.options.beforeRender === "function")
+      this.options.beforeRender(this);
   }
 
   /**
    * Executes the callback function every time simple-keyboard is rendered (e.g: when you change layouts).
    */
   onRender() {
-    if (typeof this.options.onRender === 'function') this.options.onRender(this);
+    if (typeof this.options.onRender === "function")
+      this.options.onRender(this);
   }
 
   /**
    * Executes the callback function once all modules have been loaded
    */
   onModulesLoaded() {
-    if (typeof this.options.onModulesLoaded === 'function') this.options.onModulesLoaded(this);
+    if (typeof this.options.onModulesLoaded === "function")
+      this.options.onModulesLoaded(this);
   }
 
   /**
@@ -1666,14 +1614,13 @@ class SimpleKeyboard {
   loadModules() {
     if (Array.isArray(this.options.modules)) {
       this.options.modules.forEach((KeyboardModule) => {
-        const keyboardModule = this.utilities.isConstructor(KeyboardModule)
-          ? new KeyboardModule(this)
-          : KeyboardModule(this);
+        const keyboardModule = this.utilities.isConstructor(KeyboardModule) ?
+          new KeyboardModule(this) : KeyboardModule(this);
 
         keyboardModule.init && keyboardModule.init(this);
       });
 
-      this.keyboardPluginClasses = 'modules-loaded';
+      this.keyboardPluginClasses = "modules-loaded";
 
       this.render();
       this.onModulesLoaded();
@@ -1731,21 +1678,26 @@ class SimpleKeyboard {
         /**
          * Create button container
          */
-        const containerDOM = document.createElement('div');
-        containerDOM.className += 'hg-button-container';
+        const containerDOM = document.createElement("div");
+        containerDOM.className += "hg-button-container";
         const containerUID = `${this.options.layoutName}-r${rowIndex}c${arrIndex}`;
-        containerDOM.setAttribute('data-skUID', containerUID);
+        containerDOM.setAttribute("data-skUID", containerUID);
 
         /**
          * Taking elements due to be inserted into container
          */
-        const containedElements = rowDOMArray.splice(updated_startIndex, updated_endIndex - updated_startIndex + 1);
+        const containedElements = rowDOMArray.splice(
+          updated_startIndex,
+          updated_endIndex - updated_startIndex + 1
+        );
         removedElements += updated_endIndex - updated_startIndex;
 
         /**
          * Inserting elements to container
          */
-        containedElements.forEach((element) => containerDOM.appendChild(element));
+        containedElements.forEach((element) =>
+          containerDOM.appendChild(element)
+        );
 
         /**
          * Adding container at correct position within rowDOMArray
@@ -1755,7 +1707,7 @@ class SimpleKeyboard {
         /**
          * Clearing old rowDOM children structure
          */
-        rowDOM.innerHTML = '';
+        rowDOM.innerHTML = "";
 
         /**
          * Appending rowDOM new children list
@@ -1763,7 +1715,13 @@ class SimpleKeyboard {
         rowDOMArray.forEach((element) => rowDOM.appendChild(element));
 
         if (this.options.debug) {
-          console.log('rowDOMContainer', containedElements, updated_startIndex, updated_endIndex, removedElements + 1);
+          console.log(
+            "rowDOMContainer",
+            containedElements,
+            updated_startIndex,
+            updated_endIndex,
+            removedElements + 1
+          );
         }
       });
     }
@@ -1775,9 +1733,11 @@ class SimpleKeyboard {
    * getKeyboardClassString
    */
   getKeyboardClassString = (...baseDOMClasses: any[]) => {
-    const keyboardClasses = [this.keyboardDOMClass, ...baseDOMClasses].filter((DOMClass) => !!DOMClass);
+    const keyboardClasses = [this.keyboardDOMClass, ...baseDOMClasses].filter(
+      (DOMClass) => !!DOMClass
+    );
 
-    return keyboardClasses.join(' ');
+    return keyboardClasses.join(" ");
   };
 
   /**
@@ -1804,7 +1764,7 @@ class SimpleKeyboard {
     const layoutClass = `hg-layout-${this.options.layoutName}`;
     const layout = this.options.layout || getDefaultLayout();
     const useTouchEvents = this.options.useTouchEvents || false;
-    const useTouchEventsClass = useTouchEvents ? 'hg-touch-events' : '';
+    const useTouchEventsClass = useTouchEvents ? "hg-touch-events" : "";
     const useMouseEvents = this.options.useMouseEvents || false;
     const disableRowButtonContainers = this.options.disableRowButtonContainers;
 
@@ -1821,298 +1781,252 @@ class SimpleKeyboard {
     /**
      * Adding keyboard identifier
      */
-    this.keyboardDOM.setAttribute('data-skInstance', this.currentInstanceName);
-
-    /**
-     * Add WCAG 2.1 compliance attributes - LPJr
-     * https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html
-     */
-
-    /**
-     * WCAG 2.1 / Section 508a Accessibility Compliance - LPJr
-     *
-     * This virtual keyboard component follows best-effort WCAG 2.1 Level AA and 508a compliance practices:
-     *
-     * Keyboard Navigability (2.1.1)
-     *    - All keys are operable via arrow keys and focus management
-     *    - `Tab` and `Shift+Tab` allow exiting and re-entering the keyboard area
-     *
-     * Focus Visibility (2.4.7)
-     *    - Each key uses `tabIndex` and is visibly highlighted when focused
-     *
-     * Name, Role, Value (4.1.2)
-     *    - Each key has `role="button"` (if not native <button>)
-     *    - Each key has an `aria-label` and visible text
-     *    - Keyboard container has `role="application"` and a programmatic label
-     *
-     * Live Region Announcements
-     *    - Not implemented to avoid screen reader overload
-     *    - Optional feature per WCAG; not required for conformance
-     *    - Output is assumed to be visually accessible or programmatically exposed elsewhere
-     *
-     * Customization
-     *    - `aria-label` for the keyboard can be overridden via `options.ariaLabel`
-     *    - Accessible layout is language-agnostic and screen reader-friendly
-     */
-
-    this.options.useLiveRegion ??= true;
-    this.options.liveRegionMode ??= 'polite';
-    this.options.liveRegionDelay ??= 100;
-    this.options.ariaLabel ??= 'Virtual Keyboard';
-
-    this.keyboardDOM.setAttribute('role', 'application');
-    this.keyboardDOM.setAttribute('aria-label', this.options.ariaLabel || 'Virtual Keyboard');
-    this.keyboardDOM.setAttribute('tabindex', '0');
-
-    if (this.options.useLiveRegion) {
-      this.liveRegion = document.createElement('div');
-      this.liveRegion.classList.add('hg-live-region', 'sr-only');
-      this.liveRegion.setAttribute('role', 'status');
-      this.liveRegion.setAttribute('aria-live', 'polite');
-      this.liveRegion.setAttribute('aria-atomic', 'true');
-      this.keyboardDOM.appendChild(this.liveRegion);
-    }
+    this.keyboardDOM.setAttribute("data-skInstance", this.currentInstanceName);
 
     /**
      * Create row wrapper
      */
-    this.keyboardRowsDOM = document.createElement('div');
-    this.keyboardRowsDOM.className = 'hg-rows';
+    this.keyboardRowsDOM = document.createElement("div");
+    this.keyboardRowsDOM.className = "hg-rows";
 
     /**
      * Iterating through each row
      */
-    layout[this.options.layoutName || this.defaultName].forEach((row: string, rIndex: number) => {
-      let rowArray = row.split(' ');
-
-      /**
-       * Enforce excludeFromLayout
-       */
-      if (
-        this.options.excludeFromLayout &&
-        this.options.excludeFromLayout[this.options.layoutName || this.defaultName]
-      ) {
-        rowArray = rowArray.filter(
-          (buttonName) =>
-            this.options.excludeFromLayout &&
-            !this.options.excludeFromLayout[this.options.layoutName || this.defaultName].includes(buttonName)
-        );
-      }
-
-      /**
-       * Creating empty row
-       */
-      let rowDOM = document.createElement('div');
-      rowDOM.className += 'hg-row';
-
-      /**
-       * Tracking container indicators in rows
-       */
-      const containerStartIndexes: number[] = [];
-      const containerEndIndexes: number[] = [];
-
-      /**
-       * Iterating through each button in row
-       */
-      rowArray.forEach((button, bIndex) => {
-        /**
-         * Check if button has a container indicator
-         */
-        const buttonHasContainerStart =
-          !disableRowButtonContainers && typeof button === 'string' && button.length > 1 && button.indexOf('[') === 0;
-
-        const buttonHasContainerEnd =
-          !disableRowButtonContainers &&
-          typeof button === 'string' &&
-          button.length > 1 &&
-          button.indexOf(']') === button.length - 1;
+    layout[this.options.layoutName || this.defaultName].forEach(
+      (row: string, rIndex: number) => {
+        let rowArray = row.split(" ");
 
         /**
-         * Save container start index, if applicable
+         * Enforce excludeFromLayout
          */
-        if (buttonHasContainerStart) {
-          containerStartIndexes.push(bIndex);
-
-          /**
-           * Removing indicator
-           */
-          button = button.replace(/\[/g, '');
-        }
-
-        if (buttonHasContainerEnd) {
-          containerEndIndexes.push(bIndex);
-
-          /**
-           * Removing indicator
-           */
-          button = button.replace(/\]/g, '');
+        if (
+          this.options.excludeFromLayout &&
+          this.options.excludeFromLayout[
+            this.options.layoutName || this.defaultName
+          ]
+        ) {
+          rowArray = rowArray.filter(
+            (buttonName) =>
+              this.options.excludeFromLayout &&
+              !this.options.excludeFromLayout[
+                this.options.layoutName || this.defaultName
+              ].includes(buttonName)
+          );
         }
 
         /**
-         * Processing button options
+         * Creating empty row
          */
-        const fctBtnClass = this.utilities.getButtonClass(button);
-        const buttonDisplayName = this.utilities.getButtonDisplayName(
-          button,
-          this.options.display,
-          this.options.mergeDisplay
-        );
+        let rowDOM = document.createElement("div");
+        rowDOM.className += "hg-row";
 
         /**
-         * Creating button
+         * Tracking container indicators in rows
          */
-        const buttonType = this.options.useButtonTag ? 'button' : 'div';
-        const buttonDOM = document.createElement(buttonType);
-        buttonDOM.className += `hg-button ${fctBtnClass}`;
+        const containerStartIndexes: number[] = [];
+        const containerEndIndexes: number[] = [];
 
         /**
-         * Adding buttonTheme
+         * Iterating through each button in row
          */
-        buttonDOM.classList.add(...this.getButtonThemeClasses(button));
-
-        /**
-         * Adding buttonAttributes
-         */
-        this.setDOMButtonAttributes(button, (attribute: string, value: string) => {
-          buttonDOM.setAttribute(attribute, value);
-        });
-
-        this.activeButtonClass = 'hg-activeButton';
-
-        /**
-         * Handle button click event
-         */
-        /* istanbul ignore next */
-        if (this.utilities.pointerEventsSupported() && !useTouchEvents && !useMouseEvents) {
+        rowArray.forEach((button, bIndex) => {
           /**
-           * Handle PointerEvents
+           * Check if button has a container indicator
            */
-          buttonDOM.onpointerdown = (e: KeyboardHandlerEvent) => {
-            this.handleButtonClicked(button, e);
-            this.handleButtonMouseDown(button, e);
-          };
-          buttonDOM.onpointerup = (e: KeyboardHandlerEvent) => {
-            this.handleButtonMouseUp(button, e);
-          };
-          buttonDOM.onpointercancel = (e: KeyboardHandlerEvent) => {
-            this.handleButtonMouseUp(button, e);
-          };
-        } else {
+          const buttonHasContainerStart =
+            !disableRowButtonContainers &&
+            typeof button === "string" &&
+            button.length > 1 &&
+            button.indexOf("[") === 0;
+
+          const buttonHasContainerEnd =
+            !disableRowButtonContainers &&
+            typeof button === "string" &&
+            button.length > 1 &&
+            button.indexOf("]") === button.length - 1;
+
           /**
-           * Fallback for browsers not supporting PointerEvents
+           * Save container start index, if applicable
            */
-          if (useTouchEvents) {
+          if (buttonHasContainerStart) {
+            containerStartIndexes.push(bIndex);
+
             /**
-             * Handle touch events
+             * Removing indicator
              */
-            buttonDOM.ontouchstart = (e: KeyboardHandlerEvent) => {
+            button = button.replace(/\[/g, "");
+          }
+
+          if (buttonHasContainerEnd) {
+            containerEndIndexes.push(bIndex);
+
+            /**
+             * Removing indicator
+             */
+            button = button.replace(/\]/g, "");
+          }
+
+          /**
+           * Processing button options
+           */
+          const fctBtnClass = this.utilities.getButtonClass(button);
+          const buttonDisplayName = this.utilities.getButtonDisplayName(
+            button,
+            this.options.display,
+            this.options.mergeDisplay
+          );
+
+          /**
+           * Creating button
+           */
+          const buttonType = this.options.useButtonTag ? "button" : "div";
+          const buttonDOM = document.createElement(buttonType);
+          buttonDOM.className += `hg-button ${fctBtnClass}`;
+
+          /**
+           * Adding buttonTheme
+           */
+          buttonDOM.classList.add(...this.getButtonThemeClasses(button));
+
+          /**
+           * Adding buttonAttributes
+           */
+          this.setDOMButtonAttributes(
+            button,
+            (attribute: string, value: string) => {
+              buttonDOM.setAttribute(attribute, value);
+            }
+          );
+
+          this.activeButtonClass = "hg-activeButton";
+
+          /**
+           * Handle button click event
+           */
+          /* istanbul ignore next */
+          if (
+            this.utilities.pointerEventsSupported() &&
+            !useTouchEvents &&
+            !useMouseEvents
+          ) {
+            /**
+             * Handle PointerEvents
+             */
+            buttonDOM.onpointerdown = (e: KeyboardHandlerEvent) => {
               this.handleButtonClicked(button, e);
               this.handleButtonMouseDown(button, e);
             };
-            buttonDOM.ontouchend = (e: KeyboardHandlerEvent) => {
+            buttonDOM.onpointerup = (e: KeyboardHandlerEvent) => {
               this.handleButtonMouseUp(button, e);
             };
-            buttonDOM.ontouchcancel = (e: KeyboardHandlerEvent) => {
+            buttonDOM.onpointercancel = (e: KeyboardHandlerEvent) => {
               this.handleButtonMouseUp(button, e);
             };
           } else {
             /**
-             * Handle mouse events
+             * Fallback for browsers not supporting PointerEvents
              */
-            buttonDOM.onclick = (e: KeyboardHandlerEvent) => {
-              this.setMouseHold(false);
+            if (useTouchEvents) {
               /**
-               * Fire button handler in onclick for compatibility reasons
-               * This fires handler before onKeyReleased, therefore when that option is set we will fire the handler
-               * in onmousedown instead
+               * Handle touch events
                */
-              if (
-                typeof this.options.onKeyReleased !== 'function' &&
-                !(this.options.useMouseEvents && this.options.clickOnMouseDown)
-              ) {
+              buttonDOM.ontouchstart = (e: KeyboardHandlerEvent) => {
                 this.handleButtonClicked(button, e);
-              }
-            };
-            buttonDOM.onmousedown = (e: KeyboardHandlerEvent) => {
+                this.handleButtonMouseDown(button, e);
+              };
+              buttonDOM.ontouchend = (e: KeyboardHandlerEvent) => {
+                this.handleButtonMouseUp(button, e);
+              };
+              buttonDOM.ontouchcancel = (e: KeyboardHandlerEvent) => {
+                this.handleButtonMouseUp(button, e);
+              };
+            } else {
               /**
-               * Fire button handler for onKeyReleased use-case
+               * Handle mouse events
                */
-              if (
-                (typeof this.options.onKeyReleased === 'function' ||
-                  (this.options.useMouseEvents && this.options.clickOnMouseDown)) &&
-                !this.isMouseHold
-              ) {
-                this.handleButtonClicked(button, e);
-              }
-              this.handleButtonMouseDown(button, e);
-            };
-            buttonDOM.onmouseup = (e: KeyboardHandlerEvent) => {
-              this.handleButtonMouseUp(button, e);
-            };
+              buttonDOM.onclick = (e: KeyboardHandlerEvent) => {
+                this.setMouseHold(false);
+                /**
+                 * Fire button handler in onclick for compatibility reasons
+                 * This fires handler before onKeyReleased, therefore when that option is set we will fire the handler
+                 * in onmousedown instead
+                 */
+                if (
+                  typeof this.options.onKeyReleased !== "function" &&
+                  !(this.options.useMouseEvents && this.options.clickOnMouseDown)
+                ) {
+                  this.handleButtonClicked(button, e);
+                }
+              };
+              buttonDOM.onmousedown = (e: KeyboardHandlerEvent) => {
+                /**
+                 * Fire button handler for onKeyReleased use-case
+                 */
+                if (
+                  (
+                    typeof this.options.onKeyReleased === "function" ||
+                    (this.options.useMouseEvents && this.options.clickOnMouseDown)
+                  ) &&
+                  !this.isMouseHold
+                ) {
+                  this.handleButtonClicked(button, e);
+                }
+                this.handleButtonMouseDown(button, e);
+              };
+              buttonDOM.onmouseup = (e: KeyboardHandlerEvent) => {
+                this.handleButtonMouseUp(button, e);
+              };
+            }
           }
-        }
+
+          /**
+           * Adding identifier
+           */
+          buttonDOM.setAttribute("data-skBtn", button);
+
+          /**
+           * Adding unique id
+           * Since there's no limit on spawning same buttons, the unique id ensures you can style every button
+           */
+          const buttonUID = `${this.options.layoutName}-r${rIndex}b${bIndex}`;
+          buttonDOM.setAttribute("data-skBtnUID", buttonUID);
+
+          /**
+           * Adding button label to button
+           */
+          const buttonSpanDOM = document.createElement("span");
+          buttonSpanDOM.innerHTML = buttonDisplayName;
+          buttonDOM.appendChild(buttonSpanDOM);
+
+          /**
+           * Adding to buttonElements
+           */
+          if (!this.buttonElements[button]) this.buttonElements[button] = [];
+
+          this.buttonElements[button].push(buttonDOM);
+
+          /**
+           * Appending button to row
+           */
+          rowDOM.appendChild(buttonDOM);
+        });
 
         /**
-         * Adding identifier
+         * Parse containers in row
          */
-        buttonDOM.setAttribute('data-skBtn', button);
+        rowDOM = this.parseRowDOMContainers(
+          rowDOM,
+          rIndex,
+          containerStartIndexes,
+          containerEndIndexes
+        );
 
         /**
-         * Adding unique id
-         * Since there's no limit on spawning same buttons, the unique id ensures you can style every button
+         * Appending row to hg-rows
          */
-        const buttonUID = `${this.options.layoutName}-r${rIndex}b${bIndex}`;
-        buttonDOM.setAttribute('data-skBtnUID', buttonUID);
-
-        /**
-         * Adding WCAG 2.1 compliance attributes - LPjr
-         */
-        // Accessibility: Set role and focus management
-        if (buttonType === 'div') {
-          buttonDOM.setAttribute('role', 'button');
-        }
-
-        buttonDOM.setAttribute('tabindex', '-1'); // Only one key should be tabbable at a time
-        buttonDOM.setAttribute('aria-label', buttonDisplayName);
-
-        // Optional: Title attribute for screen readers
-        buttonDOM.setAttribute('title', buttonDisplayName);
-
-        // Example: If this is the first key, make it focusable
-        if (rIndex === 0 && bIndex === 0) {
-          buttonDOM.setAttribute('tabindex', '0');
-        }
-
-        /**
-         * Adding button label to button
-         */
-        const buttonSpanDOM = document.createElement('span');
-        buttonSpanDOM.innerHTML = buttonDisplayName;
-        buttonDOM.appendChild(buttonSpanDOM);
-
-        /**
-         * Adding to buttonElements
-         */
-        if (!this.buttonElements[button]) this.buttonElements[button] = [];
-
-        this.buttonElements[button].push(buttonDOM);
-
-        /**
-         * Appending button to row
-         */
-        rowDOM.appendChild(buttonDOM);
-      });
-
-      /**
-       * Parse containers in row
-       */
-      rowDOM = this.parseRowDOMContainers(rowDOM, rIndex, containerStartIndexes, containerEndIndexes);
-
-      /**
-       * Appending row to hg-rows
-       */
-      this.keyboardRowsDOM.appendChild(rowDOM);
-    });
+        this.keyboardRowsDOM.appendChild(rowDOM);
+      }
+    );
 
     /**
      * Appending row to keyboard
@@ -2134,23 +2048,34 @@ class SimpleKeyboard {
        * Handling parent events
        */
       /* istanbul ignore next */
-      if (this.utilities.pointerEventsSupported() && !useTouchEvents && !useMouseEvents) {
-        document.onpointerup = (e: KeyboardHandlerEvent) => this.handleButtonMouseUp(undefined, e);
-        this.keyboardDOM.onpointerdown = (e: KeyboardHandlerEvent) => this.handleKeyboardContainerMouseDown(e);
+      if (
+        this.utilities.pointerEventsSupported() &&
+        !useTouchEvents &&
+        !useMouseEvents
+      ) {
+        document.onpointerup = (e: KeyboardHandlerEvent) =>
+          this.handleButtonMouseUp(undefined, e);
+        this.keyboardDOM.onpointerdown = (e: KeyboardHandlerEvent) =>
+          this.handleKeyboardContainerMouseDown(e);
       } else if (useTouchEvents) {
         /**
          * Handling ontouchend, ontouchcancel
          */
-        document.ontouchend = (e: KeyboardHandlerEvent) => this.handleButtonMouseUp(undefined, e);
-        document.ontouchcancel = (e: KeyboardHandlerEvent) => this.handleButtonMouseUp(undefined, e);
+        document.ontouchend = (e: KeyboardHandlerEvent) =>
+          this.handleButtonMouseUp(undefined, e);
+        document.ontouchcancel = (e: KeyboardHandlerEvent) =>
+          this.handleButtonMouseUp(undefined, e);
 
-        this.keyboardDOM.ontouchstart = (e: KeyboardHandlerEvent) => this.handleKeyboardContainerMouseDown(e);
+        this.keyboardDOM.ontouchstart = (e: KeyboardHandlerEvent) =>
+          this.handleKeyboardContainerMouseDown(e);
       } else if (!useTouchEvents) {
         /**
          * Handling mouseup
          */
-        document.onmouseup = (e: KeyboardHandlerEvent) => this.handleButtonMouseUp(undefined, e);
-        this.keyboardDOM.onmousedown = (e: KeyboardHandlerEvent) => this.handleKeyboardContainerMouseDown(e);
+        document.onmouseup = (e: KeyboardHandlerEvent) =>
+          this.handleButtonMouseUp(undefined, e);
+        this.keyboardDOM.onmousedown = (e: KeyboardHandlerEvent) =>
+          this.handleKeyboardContainerMouseDown(e);
       }
 
       /**

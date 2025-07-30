@@ -1,8 +1,8 @@
-import './css/Keyboard.css';
-import PhysicalKeyboard from '../services/PhysicalKeyboard';
-import Utilities from '../services/Utilities';
-import { KeyboardOptions, KeyboardInput, KeyboardButtonElements, KeyboardHandlerEvent, KeyboardElement } from '../interfaces';
-import CandidateBox from './CandidateBox';
+import "./css/Keyboard.css";
+import PhysicalKeyboard from "../services/PhysicalKeyboard";
+import Utilities from "../services/Utilities";
+import { KeyboardOptions, KeyboardInput, KeyboardButtonElements, KeyboardHandlerEvent, KeyboardElement } from "../interfaces";
+import CandidateBox from "./CandidateBox";
 /**
  * Root class for simple-keyboard.
  * This class:
@@ -39,17 +39,6 @@ declare class SimpleKeyboard {
     keyboardRowsDOM: KeyboardElement;
     defaultName: string;
     activeInputElement: HTMLInputElement | HTMLTextAreaElement | null;
-    listenersAdded: boolean;
-    liveRegion: HTMLElement | null;
-    ariaLiveTimer: ReturnType<typeof setTimeout> | null;
-    handleKeyDownBound: (event: KeyboardEvent) => void;
-    handleInternalKeyNavBound: (event: KeyboardEvent) => void;
-    handleKeyUpBound: (event: KeyboardEvent) => void;
-    handleMouseDownBound: (event: MouseEvent) => void;
-    handleMouseUpBound: (event: MouseEvent) => void;
-    handleTouchEndBound: (event: TouchEvent) => void;
-    handleSelectBound: (event: Event) => void;
-    handleSelectionChangeBound: (event: Event) => void;
     /**
      * Creates an instance of SimpleKeyboard
      * @param {Array} selectorOrOptions If first parameter is a string, it is considered the container class. The second parameter is then considered the options object. If first parameter is an object, it is considered the options object.
@@ -195,11 +184,6 @@ declare class SimpleKeyboard {
      */
     inputPatternIsValid(inputVal: string): boolean;
     /**
-     * Handles the removal of event listers before initializing new ones
-     * This is useful when changing options that require a fresh set of event listeners
-     */
-    removeEventListeners(): void;
-    /**
      * Handles simple-keyboard event listeners
      */
     setEventListeners(): void;
@@ -211,18 +195,6 @@ declare class SimpleKeyboard {
      * Event Handler: KeyDown
      */
     handleKeyDown(event: KeyboardHandlerEvent): void;
-    /**
-     * Event Handler: Internal Key Navigation
-     */
-    handleInternalKeyNav(event: KeyboardEvent): void;
-    /**
-     * Find the next button in the keyboard layout
-     */
-    findNextButton(current: HTMLElement): HTMLElement | null;
-    /**
-     * Find the previous button in the keyboard layout
-     */
-    findPreviousButton(current: HTMLElement): HTMLElement | null;
     /**
      * Event Handler: MouseUp
      */

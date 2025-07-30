@@ -1,5 +1,5 @@
-import SimpleKeyboard from "./components/Keyboard";
-import Utilities from "./services/Utilities";
+import SimpleKeyboard from './components/Keyboard';
+import Utilities from './services/Utilities';
 export interface SKWindow extends Window {
     SimpleKeyboardInstances?: any;
 }
@@ -256,4 +256,25 @@ export interface KeyboardOptions {
      * Module options can have any format
      */
     [name: string]: any;
+    /**
+     * ARIA properties for the virtual keyboard. - LPJr
+     * These properties help improve accessibility for screen readers.
+     */
+    /**
+     * Enable ARIA live region announcements for screen readers.
+     */
+    useLiveRegion?: boolean;
+    /**
+     * Defines the type of ARIA live region.
+     * Can be 'polite' (default) or 'assertive'.
+     */
+    liveRegionMode?: 'polite' | 'assertive';
+    /**
+     * Delay before announcing keypress in live region (ms).
+     */
+    liveRegionDelay?: number;
+    /**
+     * Label for the virtual keyboard container (for screen readers).
+     */
+    ariaLabel?: string;
 }
