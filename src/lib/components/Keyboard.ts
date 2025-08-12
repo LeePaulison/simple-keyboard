@@ -45,6 +45,8 @@ class SimpleKeyboard {
   keyboardRowsDOM!: KeyboardElement;
   defaultName = 'default';
   activeInputElement: HTMLInputElement | HTMLTextAreaElement | null = null;
+  keyboardInstructions: HTMLElement | null = null;
+  instructions: string | null = null;
   listenersAdded = false;
   liveRegion: HTMLElement | null = null;
   ariaLiveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -56,6 +58,13 @@ class SimpleKeyboard {
   handleTouchEndBound!: (event: TouchEvent) => void;
   handleSelectBound!: (event: Event) => void;
   handleSelectionChangeBound!: (event: Event) => void;
+  NAV_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End', 'PageUp', 'PageDown']);
+  MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'NumLock', 'ScrollLock', 'Fn', 'FnLock']);
+  NAMED_KEYS_TO_ANNOUNCE = new Set(['Enter', 'Backspace', 'Delete', 'Escape', ' ', 'Spacebar']);
+  NAMED_READABLE: Record<string, string> = {
+    ' ': 'Space',
+    Spacebar: 'Space',
+  };
 
   /**
    * Creates an instance of SimpleKeyboard
@@ -1147,19 +1156,45 @@ class SimpleKeyboard {
       this.physicalKeyboard.handleHighlightKeyDown(event);
     }
 
+    console.log('KeyDown event triggered on: ', event.target.innerHTML);
+
     if (!(event instanceof KeyboardEvent)) return;
     this.getButtonAndAnnounce(event);
   }
 
   /**
    * Get the Button Element for Live Region announcements
+   * Backward-compatible entry point; now internally gated.
    */
   getButtonAndAnnounce(event: KeyboardEvent): void {
     if (!(event instanceof KeyboardEvent)) return;
+    if (event.isComposing) return; // IME composition: no announce
+    if (event.repeat) return; // optional: suppress held-key spam
 
+    const pressedKey = event.key;
+
+    // 1) Hard gate: no announce on navigation or pure modifiers
+    if (this.NAV_KEYS.has(pressedKey) || this.MODIFIER_KEYS.has(pressedKey)) return;
+
+    // 2) Only allow printable chars (no modifier chords) or whitelisted named keys
+    const isPrintable = pressedKey?.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
+
+    const isNamedAllowed = this.NAMED_KEYS_TO_ANNOUNCE.has(pressedKey);
+
+    if (!isPrintable && !isNamedAllowed) return;
+
+    // 3) Resolve the key label from the element (works for both click + physical)
+    if (!this.keyboardDOM.contains(event.target as Node)) return;
     const buttonEl = event.target as KeyboardElement;
-    const label = buttonEl.getAttribute('aria-label') || buttonEl.textContent || 'Unknown Key';
-    this.announceLiveRegion(label);
+
+    // Prefer aria-label; fall back to trimmed textContent
+    const rawLabel =
+      buttonEl.getAttribute('aria-label') || (buttonEl.textContent || '').trim() || pressedKey || 'Unknown Key';
+
+    const label = this.NAMED_READABLE[rawLabel] || rawLabel;
+
+    // 4) Context: use "pressed" by default
+    this.announceLiveRegion(label, 'pressed');
   }
 
   /**
@@ -1211,9 +1246,12 @@ class SimpleKeyboard {
       case 'ArrowLeft':
         nextButton = this.findPreviousButton(focused);
         break;
-      // Optional:
-      // case 'ArrowDown': ...
-      // case 'ArrowUp': ...
+      case 'ArrowDown':
+        nextButton = this.findVerticalButton(focused, 'down');
+        break;
+      case 'ArrowUp':
+        nextButton = this.findVerticalButton(focused, 'up');
+        break;
     }
 
     if (nextButton) {
@@ -1254,6 +1292,42 @@ class SimpleKeyboard {
 
     const idx = allButtons.indexOf(current);
     return allButtons[idx - 1] || null;
+  }
+
+  /**
+   * Find the vertically closest button above or below the current one.
+   */
+  findVerticalButton(current: HTMLElement, direction: 'up' | 'down'): HTMLElement | null {
+    const rows = Array.from(this.keyboardDOM.querySelectorAll('.hg-row')) as HTMLElement[];
+    const currentRow = current.closest('.hg-row') as HTMLElement | null;
+    if (!currentRow) return null;
+
+    const rowIndex = rows.indexOf(currentRow);
+    const targetIndex = direction === 'up' ? rowIndex - 1 : rowIndex + 1;
+    const targetRow = rows[targetIndex];
+    if (!targetRow) return null; // already at top or bottom
+
+    const currentRect = current.getBoundingClientRect();
+    const currentCenterX = currentRect.left + currentRect.width / 2;
+
+    const candidates = Array.from(targetRow.querySelectorAll<HTMLElement>('[data-skBtn]'));
+    if (!candidates.length) return null;
+
+    // Find the key in target row closest in X to the current key
+    let closest = candidates[0];
+    let minDelta = Number.POSITIVE_INFINITY;
+
+    for (const el of candidates) {
+      const rect = el.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const delta = Math.abs(centerX - currentCenterX);
+      if (delta < minDelta) {
+        minDelta = delta;
+        closest = el;
+      }
+    }
+
+    return closest;
   }
 
   /**
@@ -1860,9 +1934,9 @@ class SimpleKeyboard {
     this.options.liveRegionDelay ??= 100;
     this.options.ariaLabel ??= 'Virtual Keyboard';
 
-    this.keyboardDOM.setAttribute('role', 'application');
+    this.keyboardDOM.setAttribute('role', 'group');
     this.keyboardDOM.setAttribute('aria-label', this.options.ariaLabel || 'Virtual Keyboard');
-    this.keyboardDOM.setAttribute('tabindex', '0');
+    // this.keyboardDOM.setAttribute('tabindex', '0');
 
     if (this.options.useLiveRegion) {
       this.liveRegion = document.createElement('div');
@@ -1872,6 +1946,19 @@ class SimpleKeyboard {
       this.liveRegion.setAttribute('aria-atomic', 'true');
       this.keyboardDOM.appendChild(this.liveRegion);
     }
+
+    this.instructions =
+      this.options.instructions ||
+      'Arrow keys navigate left, right, up, and down.  Enter or Space to select. Tab to exit keyboard.';
+
+    this.keyboardInstructions = document.createElement('p');
+    this.keyboardInstructions.classList.add('hg-instructions', 'sr-only');
+    this.keyboardInstructions.id = 'hg-virtual-keyboard-instructions';
+    this.keyboardInstructions.setAttribute('role', 'note');
+    this.keyboardInstructions.setAttribute('aria-label', 'Keyboard instructions');
+    this.keyboardInstructions.textContent = this.instructions;
+    this.keyboardDOM.appendChild(this.keyboardInstructions);
+    this.keyboardDOM.setAttribute('aria-describedby', this.keyboardInstructions.id);
 
     /**
      * Create row wrapper

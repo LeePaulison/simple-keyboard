@@ -8,16 +8,15 @@
   box-sizing: border-box;
   overflow: hidden;
   touch-action: manipulation;
-  font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue",
-    Helvetica, Arial, "Lucida Grande", sans-serif;
+  font-family: 'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande',
+    sans-serif;
   background-color: #ececec;
   padding: 5px;
   border-radius: 5px;
 }
 
 .hg-theme-default .hg-button span,
-.hg-theme-default .hg-button span svg
- {
+.hg-theme-default .hg-button span svg {
   pointer-events: none;
 }
 
@@ -114,10 +113,32 @@
   color: white;
 }
 
-.hg-theme-default .hg-button.hg-standardBtn[data-skbtn=".com"] {
+.hg-theme-default .hg-button.hg-standardBtn[data-skbtn='.com'] {
   max-width: 82px;
 }
 
-.hg-theme-default .hg-button.hg-standardBtn[data-skbtn="@"] {
+.hg-theme-default .hg-button.hg-standardBtn[data-skbtn='@'] {
   max-width: 60px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+.sr-only:focus,
+.sr-only-focusable:active {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
 }
