@@ -1,5 +1,5 @@
-import { KeyboardInput } from "./../interfaces";
-import { KeyboardOptions, UtilitiesParams } from "../interfaces";
+import { KeyboardInput } from './../interfaces';
+import { KeyboardOptions, UtilitiesParams } from '../interfaces';
 /**
  * Utility Service
  */
@@ -12,7 +12,7 @@ declare class Utilities {
     /**
      * Creates an instance of the Utility service
      */
-    constructor({ getOptions, getCaretPosition, getCaretPositionEnd, dispatch, }: UtilitiesParams);
+    constructor({ getOptions, getCaretPosition, getCaretPositionEnd, dispatch }: UtilitiesParams);
     /**
      * Retrieve button type
      *
@@ -30,67 +30,67 @@ declare class Utilities {
     /**
      * Default button display labels
      */
-    getDefaultDiplay(): {
-        "{bksp}": string;
-        "{backspace}": string;
-        "{enter}": string;
-        "{shift}": string;
-        "{shiftleft}": string;
-        "{shiftright}": string;
-        "{alt}": string;
-        "{s}": string;
-        "{tab}": string;
-        "{lock}": string;
-        "{capslock}": string;
-        "{accept}": string;
-        "{space}": string;
-        "{//}": string;
-        "{esc}": string;
-        "{escape}": string;
-        "{f1}": string;
-        "{f2}": string;
-        "{f3}": string;
-        "{f4}": string;
-        "{f5}": string;
-        "{f6}": string;
-        "{f7}": string;
-        "{f8}": string;
-        "{f9}": string;
-        "{f10}": string;
-        "{f11}": string;
-        "{f12}": string;
-        "{numpaddivide}": string;
-        "{numlock}": string;
-        "{arrowup}": string;
-        "{arrowleft}": string;
-        "{arrowdown}": string;
-        "{arrowright}": string;
-        "{prtscr}": string;
-        "{scrolllock}": string;
-        "{pause}": string;
-        "{insert}": string;
-        "{home}": string;
-        "{pageup}": string;
-        "{delete}": string;
-        "{forwarddelete}": string;
-        "{end}": string;
-        "{pagedown}": string;
-        "{numpadmultiply}": string;
-        "{numpadsubtract}": string;
-        "{numpadadd}": string;
-        "{numpadenter}": string;
-        "{period}": string;
-        "{numpaddecimal}": string;
-        "{numpad0}": string;
-        "{numpad1}": string;
-        "{numpad2}": string;
-        "{numpad3}": string;
-        "{numpad4}": string;
-        "{numpad5}": string;
-        "{numpad6}": string;
-        "{numpad7}": string;
-        "{numpad8}": string;
-        "{numpad9}": string;
+    getDefaultDisplay(): {
+        '{bksp}': string;
+        '{backspace}': string;
+        '{enter}': string;
+        '{shift}': string;
+        '{shiftleft}': string;
+        '{shiftright}': string;
+        '{alt}': string;
+        '{s}': string;
+        '{tab}': string;
+        '{lock}': string;
+        '{capslock}': string;
+        '{accept}': string;
+        '{space}': string;
+        '{//}': string;
+        '{esc}': string;
+        '{escape}': string;
+        '{f1}': string;
+        '{f2}': string;
+        '{f3}': string;
+        '{f4}': string;
+        '{f5}': string;
+        '{f6}': string;
+        '{f7}': string;
+        '{f8}': string;
+        '{f9}': string;
+        '{f10}': string;
+        '{f11}': string;
+        '{f12}': string;
+        '{numpaddivide}': string;
+        '{numlock}': string;
+        '{arrowup}': string;
+        '{arrowleft}': string;
+        '{arrowdown}': string;
+        '{arrowright}': string;
+        '{prtscr}': string;
+        '{scrolllock}': string;
+        '{pause}': string;
+        '{insert}': string;
+        '{home}': string;
+        '{pageup}': string;
+        '{delete}': string;
+        '{forwarddelete}': string;
+        '{end}': string;
+        '{pagedown}': string;
+        '{numpadmultiply}': string;
+        '{numpadsubtract}': string;
+        '{numpadadd}': string;
+        '{numpadenter}': string;
+        '{period}': string;
+        '{numpaddecimal}': string;
+        '{numpad0}': string;
+        '{numpad1}': string;
+        '{numpad2}': string;
+        '{numpad3}': string;
+        '{numpad4}': string;
+        '{numpad5}': string;
+        '{numpad6}': string;
+        '{numpad7}': string;
+        '{numpad8}': string;
+        '{numpad9}': string;
     };
     /**
      * Returns the display (label) name for a given button
@@ -99,7 +99,7 @@ declare class Utilities {
      * @param  {object} display The provided display option
      * @param  {boolean} mergeDisplay Whether the provided param value should be merged with the default one.
      */
-    getButtonDisplayName(button: string, display: KeyboardOptions["display"], mergeDisplay?: boolean): string;
+    getButtonDisplayName(button: string, display: KeyboardOptions['display'], mergeDisplay?: boolean): string;
     /**
      * Returns the updated input resulting from clicking a given button
      *
