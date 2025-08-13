@@ -43,6 +43,10 @@ declare class SimpleKeyboard {
     instructions: string | null;
     listenersAdded: boolean;
     ariaLiveTimer: ReturnType<typeof setTimeout> | null;
+    useLiveRegion: boolean;
+    liveRegionMode: 'assertive' | 'polite';
+    liveRegionDisplay: number;
+    ariaLabel: string;
     handleKeyDownBound: (event: KeyboardEvent) => void;
     handleInternalKeyNavBound: (event: KeyboardEvent) => void;
     handleKeyUpBound: (event: KeyboardEvent) => void;
