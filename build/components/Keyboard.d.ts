@@ -45,7 +45,7 @@ declare class SimpleKeyboard {
     ariaLiveTimer: ReturnType<typeof setTimeout> | null;
     useLiveRegion: boolean;
     liveRegionMode: 'assertive' | 'polite';
-    liveRegionDisplay: number;
+    liveRegionDelay: number;
     ariaLabel: string;
     handleKeyDownBound: (event: KeyboardEvent) => void;
     handleInternalKeyNavBound: (event: KeyboardEvent) => void;
