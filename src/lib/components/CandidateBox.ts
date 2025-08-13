@@ -10,6 +10,7 @@ class CandidateBox {
   pageSize: number;
   private activeIndex = 0;
   private candidateOptions: HTMLLIElement[] = [];
+  private globalLiveRegionElement: HTMLElement | null = document.querySelector('.hg-live-region');
 
   constructor({ utilities, options }: CandidateBoxParams) {
     this.utilities = utilities;
@@ -167,6 +168,12 @@ class CandidateBox {
       next.setAttribute('aria-selected', 'true');
       next.classList.add('active');
       next.scrollIntoView({ block: 'nearest' });
+
+      if (this.globalLiveRegionElement) {
+        const total = this.candidateOptions.length;
+        const label = next.textContent?.trim();
+        this.globalLiveRegionElement.textContent = `${newIndex + 1} of ${total}: ${label}`;
+      }
 
       if (!this.candidateBoxElement) return;
 
