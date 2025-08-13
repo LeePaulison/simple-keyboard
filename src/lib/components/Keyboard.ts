@@ -48,7 +48,6 @@ class SimpleKeyboard {
   keyboardInstructions: HTMLElement | null = null;
   instructions: string | null = null;
   listenersAdded = false;
-  liveRegion: HTMLElement | null = null;
   ariaLiveTimer: ReturnType<typeof setTimeout> | null = null;
   handleKeyDownBound!: (event: KeyboardEvent) => void;
   handleInternalKeyNavBound!: (event: KeyboardEvent) => void;
@@ -65,6 +64,7 @@ class SimpleKeyboard {
     ' ': 'Space',
     Spacebar: 'Space',
   };
+  private announcerEl: HTMLDivElement | null = null;
 
   /**
    * Creates an instance of SimpleKeyboard
@@ -74,6 +74,14 @@ class SimpleKeyboard {
     if (typeof window === 'undefined') return;
 
     const { keyboardDOMClass, keyboardDOM, options = {} } = this.handleParams(selectorOrOptions, keyboardOptions);
+
+    /**
+     * Implementing Announcer
+     */
+    if (!keyboardDOM) throw new Error('Keyboard root not found');
+
+    // Reuse or create announcer; safe before/after attachment
+    this.announcerEl = this.ensureAnnouncer(keyboardDOM);
 
     /**
      * Initializing Utilities
@@ -249,6 +257,51 @@ class SimpleKeyboard {
      */
     this.modules = {};
     this.loadModules();
+  }
+
+  /**
+   * Accessibility Announcer
+   * This module is responsible for announcing changes in the keyboard state to assistive technologies.
+   */
+  private ensureAnnouncer(keyboardEl: Element): HTMLDivElement {
+    const parentEl = keyboardEl.parentElement;
+
+    // Prefer sibling announcer
+    if (parentEl) {
+      let announcerEl = parentEl.querySelector<HTMLDivElement>(':scope > .hg-live-region');
+      if (!announcerEl) {
+        announcerEl = document.createElement('div');
+        announcerEl.className = 'hg-live-region sr-only';
+        announcerEl.setAttribute('role', 'status');
+        announcerEl.setAttribute('aria-live', 'polite');
+        announcerEl.setAttribute('aria-atomic', 'false');
+        keyboardEl.insertAdjacentElement('afterend', announcerEl);
+      } else {
+        announcerEl.textContent = '';
+      }
+      return announcerEl;
+    }
+
+    // Fallback: insert inside root but outside key rows
+    let announcerEl = keyboardEl.querySelector<HTMLDivElement>(':scope > .hg-live-region');
+    if (!announcerEl) {
+      announcerEl = document.createElement('div');
+      announcerEl.className = 'hg-live-region sr-only';
+      announcerEl.setAttribute('role', 'status');
+      announcerEl.setAttribute('aria-live', 'polite');
+      announcerEl.setAttribute('aria-atomic', 'false');
+
+      const rowsEl = keyboardEl.querySelector(':scope > .hg-rows');
+      if (rowsEl && rowsEl.nextSibling) {
+        keyboardEl.insertBefore(announcerEl, rowsEl.nextSibling);
+      } else {
+        keyboardEl.appendChild(announcerEl);
+      }
+    } else {
+      announcerEl.textContent = '';
+    }
+
+    return announcerEl;
   }
 
   /**
@@ -1156,8 +1209,6 @@ class SimpleKeyboard {
       this.physicalKeyboard.handleHighlightKeyDown(event);
     }
 
-    console.log('KeyDown event triggered on: ', event.target.innerHTML);
-
     if (!(event instanceof KeyboardEvent)) return;
     this.getButtonAndAnnounce(event);
   }
@@ -1203,16 +1254,16 @@ class SimpleKeyboard {
    */
 
   announceLiveRegion(keyLabel: string, context = 'pressed'): void {
-    if (!this.options.useLiveRegion || !this.liveRegion) return;
+    if (!this.options.useLiveRegion || !this.announcerEl) return;
 
     if (this.ariaLiveTimer) clearTimeout(this.ariaLiveTimer);
 
     this.ariaLiveTimer = setTimeout(() => {
-      if (this.liveRegion) {
-        this.liveRegion.textContent = '';
+      if (this.announcerEl) {
+        this.announcerEl.textContent = '';
         requestAnimationFrame(() => {
-          if (this.liveRegion) {
-            this.liveRegion.textContent = `Key ${keyLabel} ${context}`;
+          if (this.announcerEl) {
+            this.announcerEl.textContent = `Key ${keyLabel} ${context}`;
           }
         });
       }
@@ -1258,19 +1309,6 @@ class SimpleKeyboard {
       focused.setAttribute('tabindex', '-1');
       nextButton.setAttribute('tabindex', '0');
       nextButton.focus();
-
-      if (this.options.useLiveRegion && this.liveRegion) {
-        const label = nextButton.getAttribute('aria-label') || nextButton.textContent || '';
-        // Clear previous aria live message
-        if (this.ariaLiveTimer !== null) {
-          clearTimeout(this.ariaLiveTimer);
-        }
-        this.ariaLiveTimer = setTimeout(() => {
-          if (this.options.useLiveRegion && this.liveRegion) {
-            this.liveRegion.textContent = `Key ${label} focused`;
-          }
-        }, this.options.liveRegionDelay || 100);
-      }
     }
   }
 
@@ -1378,11 +1416,12 @@ class SimpleKeyboard {
    * Called by {@link setEventListeners} when an event that warrants a cursor position update is triggered
    */
   caretEventHandler(event: KeyboardHandlerEvent): void {
-    let targetTagName: string;
-    if (event.target.tagName) {
-      targetTagName = event.target.tagName.toLowerCase();
-    }
+    const target = event?.target as HTMLElement | null;
 
+    let targetTagName = '';
+    if (target?.tagName) {
+      targetTagName = target.tagName.toLowerCase();
+    }
     this.dispatch((instance) => {
       let isKeyboard =
         event.target === instance.keyboardDOM || (event.target && instance.keyboardDOM.contains(event.target));
@@ -1659,6 +1698,12 @@ class SimpleKeyboard {
       console.log(`${this.keyboardDOMClass} Initialized`);
     }
 
+    //Initialize Announcer
+    this.announcerEl = this.ensureAnnouncer(this.keyboardDOM);
+    const announcers = document.querySelectorAll('.hg-live-region');
+    console.debug('[a11y] on Init announcers:', announcers.length, announcers);
+    console.debug('[a11y] on Init announcerConnected:', !!(this.announcerEl && this.announcerEl.isConnected));
+
     /**
      * setEventListeners
      */
@@ -1716,6 +1761,11 @@ class SimpleKeyboard {
    */
   onRender() {
     if (typeof this.options.onRender === 'function') this.options.onRender(this);
+
+    this.announcerEl = this.ensureAnnouncer(this.keyboardDOM);
+    const announcers = document.querySelectorAll('.hg-live-region');
+    console.debug('[a11y] on Render announcers:', announcers.length, announcers);
+    console.debug('[a11y] on Render announcerConnected:', !!(this.announcerEl && this.announcerEl.isConnected));
   }
 
   /**
@@ -1934,18 +1984,9 @@ class SimpleKeyboard {
     this.options.liveRegionDelay ??= 100;
     this.options.ariaLabel ??= 'Virtual Keyboard';
 
-    this.keyboardDOM.setAttribute('role', 'group');
+    this.keyboardDOM.setAttribute('role', 'application');
     this.keyboardDOM.setAttribute('aria-label', this.options.ariaLabel || 'Virtual Keyboard');
     // this.keyboardDOM.setAttribute('tabindex', '0');
-
-    if (this.options.useLiveRegion) {
-      this.liveRegion = document.createElement('div');
-      this.liveRegion.classList.add('hg-live-region', 'sr-only');
-      this.liveRegion.setAttribute('role', 'status');
-      this.liveRegion.setAttribute('aria-live', 'polite');
-      this.liveRegion.setAttribute('aria-atomic', 'true');
-      this.keyboardDOM.appendChild(this.liveRegion);
-    }
 
     this.instructions =
       this.options.instructions ||
@@ -1955,7 +1996,6 @@ class SimpleKeyboard {
     this.keyboardInstructions.classList.add('hg-instructions', 'sr-only');
     this.keyboardInstructions.id = 'hg-virtual-keyboard-instructions';
     this.keyboardInstructions.setAttribute('role', 'note');
-    this.keyboardInstructions.setAttribute('aria-label', 'Keyboard instructions');
     this.keyboardInstructions.textContent = this.instructions;
     this.keyboardDOM.appendChild(this.keyboardInstructions);
     this.keyboardDOM.setAttribute('aria-describedby', this.keyboardInstructions.id);

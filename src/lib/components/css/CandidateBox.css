@@ -35,11 +35,11 @@ li.hg-candidate-box-list-item:active {
 }
 
 .hg-candidate-box-prev::before {
-  content: "◄";
+  content: '◄';
 }
 
 .hg-candidate-box-next::before {
-  content: "►";
+  content: '►';
 }
 
 .hg-candidate-box-next,
@@ -63,4 +63,14 @@ li.hg-candidate-box-list-item:active {
 
 .hg-candidate-box-btn-active {
   color: #444;
+}
+
+.hg-candidate-box-list-item.active {
+  outline: 2px solid #1a73e8;
+  background-color: #e8f0fe;
+}
+
+.hg-candidate-box-list-item[aria-selected='true'] {
+  outline: 2px solid #1a73e8;
+  background-color: #e8f0fe;
 }

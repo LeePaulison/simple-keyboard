@@ -1,8 +1,8 @@
-import Keyboard from "../lib";
-import "./css/CandidateBoxDemo.css";
+import Keyboard from '../lib';
+import './css/CandidateBoxDemo.css';
 
 const setDOM = () => {
-  document.querySelector("body").innerHTML = `
+  document.querySelector('body').innerHTML = `
     <input class="input" placeholder="Tap on the virtual keyboard to start" />
     <div class="simple-keyboard"></div>
   `;
@@ -16,41 +16,43 @@ class Demo {
      * Demo Start
      */
     this.keyboard = new Keyboard({
-      onChange: input => this.onChange(input),
-      onKeyPress: button => this.onKeyPress(button),
+      onChange: (input) => this.onChange(input),
+      onKeyPress: (button) => this.onKeyPress(button),
       preventMouseDownDefault: true,
       layoutCandidatesPageSize: 15,
       layoutCandidates: {
-        ni: "你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼",
-        hao: "好 号"
-      }
+        ni: '你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼',
+        hao: '好 号',
+      },
+      physicalKeyboardHighlight: true,
+      physicalKeyboardHighlightPress: true,
+      physicalKeyboardHighlightPreventDefault: true,
     });
 
     /**
      * Update simple-keyboard when input is changed directly
      */
-    document.querySelector(".input").addEventListener("input", event => {
+    document.querySelector('.input').addEventListener('input', (event) => {
       this.keyboard.setInput(event.target.value);
     });
   }
 
   onChange(input) {
-    const inputElement = document.querySelector(".input");
+    const inputElement = document.querySelector('.input');
 
     /**
      * Updating input's value
      */
     inputElement.value = input;
-    console.log("Input changed", input);
+    console.log('Input changed', input);
 
     /**
      * Synchronizing input caret position
      */
     const caretPosition = this.keyboard.caretPosition;
-    if (caretPosition !== null)
-      this.setInputCaretPosition(inputElement, caretPosition);
+    if (caretPosition !== null) this.setInputCaretPosition(inputElement, caretPosition);
 
-    console.log("caretPosition", caretPosition);
+    console.log('caretPosition', caretPosition);
   }
 
   setInputCaretPosition(elem, pos) {
@@ -61,20 +63,20 @@ class Demo {
   }
 
   onKeyPress(button) {
-    console.log("Button pressed", button);
+    console.log('Button pressed', button);
 
     /**
      * If you want to handle the shift and caps lock buttons
      */
-    if (button === "{shift}" || button === "{lock}") this.handleShift();
+    if (button === '{shift}' || button === '{lock}') this.handleShift();
   }
 
   handleShift() {
     const currentLayout = this.keyboard.options.layoutName;
-    const shiftToggle = currentLayout === "default" ? "shift" : "default";
+    const shiftToggle = currentLayout === 'default' ? 'shift' : 'default';
 
     this.keyboard.setOptions({
-      layoutName: shiftToggle
+      layoutName: shiftToggle,
     });
   }
 }

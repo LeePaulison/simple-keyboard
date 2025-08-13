@@ -1,19 +1,15 @@
-import "./css/CandidateBox.css";
-
-import Utilities from "../services/Utilities";
-import {
-  CandidateBoxParams,
-  CandidateBoxRenderParams,
-  CandidateBoxShowParams,
-  KeyboardOptions,
-} from "./../interfaces";
+import './css/CandidateBox.css';
+import Utilities from '../services/Utilities';
+import { CandidateBoxParams, CandidateBoxRenderParams, CandidateBoxShowParams, KeyboardOptions } from './../interfaces';
 
 class CandidateBox {
   utilities: Utilities;
   options: KeyboardOptions;
-  candidateBoxElement!: HTMLDivElement;
+  candidateBoxElement: HTMLDivElement | null = null;
   pageIndex = 0;
   pageSize: number;
+  private activeIndex = 0;
+  private candidateOptions: HTMLLIElement[] = [];
 
   constructor({ utilities, options }: CandidateBoxParams) {
     this.utilities = utilities;
@@ -22,26 +18,28 @@ class CandidateBox {
     this.pageSize = this.utilities.getOptions().layoutCandidatesPageSize || 5;
   }
 
-  destroy() {
+  destroy(): void {
     if (this.candidateBoxElement) {
       this.candidateBoxElement.remove();
-      this.pageIndex = 0;
+      this.candidateBoxElement = null;
     }
+
+    this.activeIndex = 0;
+    this.candidateOptions = [];
+
+    // Ensure no keyboard nav leaks persist
+    const oldListbox = document.querySelector('.hg-candidate-box-list');
+    if (oldListbox) {
+      oldListbox.replaceWith(oldListbox.cloneNode(true)); // remove all listeners
+    }
+
+    this.pageIndex = 0;
   }
 
-  show({
-    candidateValue,
-    targetElement,
-    onSelect,
-  }: CandidateBoxShowParams): void {
-    if (!candidateValue || !candidateValue.length) {
-      return;
-    }
+  show({ candidateValue, targetElement, onSelect }: CandidateBoxShowParams): void {
+    if (!candidateValue || !candidateValue.length) return;
 
-    const candidateListPages = this.utilities.chunkArray(
-      candidateValue.split(" "),
-      this.pageSize
-    );
+    const candidateListPages = this.utilities.chunkArray(candidateValue.split(' '), this.pageSize);
 
     this.renderPage({
       candidateListPages,
@@ -55,107 +53,136 @@ class CandidateBox {
     });
   }
 
-  renderPage({
-    candidateListPages,
-    targetElement,
-    pageIndex,
-    nbPages,
-    onItemSelected,
-  }: CandidateBoxRenderParams) {
-    // Remove current candidate box, if any
+  renderPage({ candidateListPages, targetElement, pageIndex, nbPages, onItemSelected }: CandidateBoxRenderParams) {
     this.candidateBoxElement?.remove();
 
-    // Create candidate box element
-    this.candidateBoxElement = document.createElement("div");
-    this.candidateBoxElement.className = "hg-candidate-box";
+    this.candidateBoxElement = document.createElement('div');
+    this.candidateBoxElement.className = 'hg-candidate-box';
 
-    // Candidate box list
-    const candidateListULElement = document.createElement("ul");
-    candidateListULElement.className = "hg-candidate-box-list";
+    const candidateListULElement = document.createElement('ul');
+    candidateListULElement.className = 'hg-candidate-box-list';
+    candidateListULElement.setAttribute('role', 'listbox');
+    candidateListULElement.setAttribute('tabindex', '0');
 
-    // Create Candidate box list items
-    candidateListPages[pageIndex].forEach((candidateListItem) => {
-      const candidateListLIElement = document.createElement("li");
+    candidateListPages[pageIndex].forEach((candidateListItem, i) => {
+      const candidateListLIElement = document.createElement('li');
+      candidateListLIElement.setAttribute('role', 'option');
+      candidateListLIElement.setAttribute('tabindex', '-1');
+      candidateListLIElement.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+      candidateListLIElement.id = `candidate-${i}`;
+      candidateListLIElement.className = 'hg-candidate-box-list-item';
+      candidateListLIElement.innerHTML = this.options.display?.[candidateListItem] || candidateListItem;
+
       const getMouseEvent = () => {
-        const mouseEvent = new (this.options.useTouchEvents ? TouchEvent : MouseEvent)("click");
-        Object.defineProperty(mouseEvent, "target", {
-          value: candidateListLIElement,
-        });
+        const mouseEvent = new (this.options.useTouchEvents ? TouchEvent : MouseEvent)('click');
+        Object.defineProperty(mouseEvent, 'target', { value: candidateListLIElement });
         return mouseEvent;
       };
 
-      candidateListLIElement.className = "hg-candidate-box-list-item";
-      candidateListLIElement.innerHTML = this.options.display?.[candidateListItem] || candidateListItem;
-
-      if(this.options.useTouchEvents) {
-        candidateListLIElement.ontouchstart = (e: any) =>
-          onItemSelected(candidateListItem, e || getMouseEvent());
+      if (this.options.useTouchEvents) {
+        candidateListLIElement.ontouchstart = (e: any) => onItemSelected(candidateListItem, e || getMouseEvent());
       } else {
-        candidateListLIElement.onclick = (e = getMouseEvent() as MouseEvent) =>
-          onItemSelected(candidateListItem, e);
+        candidateListLIElement.onclick = (e = getMouseEvent() as MouseEvent) => onItemSelected(candidateListItem, e);
       }
 
-      // Append list item to ul
       candidateListULElement.appendChild(candidateListLIElement);
     });
 
-    // Add previous button
     const isPrevBtnElementActive = pageIndex > 0;
-    const prevBtnElement = document.createElement("div");
-    prevBtnElement.classList.add("hg-candidate-box-prev");
-    isPrevBtnElementActive &&
-      prevBtnElement.classList.add("hg-candidate-box-btn-active");
+    const prevBtnElement = document.createElement('div');
+    prevBtnElement.classList.add('hg-candidate-box-prev');
+    if (isPrevBtnElementActive) prevBtnElement.classList.add('hg-candidate-box-btn-active');
 
-    const prevBtnElementClickAction = () => {
+    prevBtnElement.onclick = () => {
       if (!isPrevBtnElementActive) return;
-      this.renderPage({
-        candidateListPages,
-        targetElement,
-        pageIndex: pageIndex - 1,
-        nbPages,
-        onItemSelected,
-      });
+      this.renderPage({ candidateListPages, targetElement, pageIndex: pageIndex - 1, nbPages, onItemSelected });
     };
 
-    if(this.options.useTouchEvents) {
-      prevBtnElement.ontouchstart = prevBtnElementClickAction;
-    } else {
-      prevBtnElement.onclick = prevBtnElementClickAction;
-    }
-    
-    this.candidateBoxElement.appendChild(prevBtnElement);
-
-    // Add elements to container
-    this.candidateBoxElement.appendChild(candidateListULElement);
-
-    // Add next button
     const isNextBtnElementActive = pageIndex < nbPages - 1;
-    const nextBtnElement = document.createElement("div");
-    nextBtnElement.classList.add("hg-candidate-box-next");
-    isNextBtnElementActive &&
-      nextBtnElement.classList.add("hg-candidate-box-btn-active");
+    const nextBtnElement = document.createElement('div');
+    nextBtnElement.classList.add('hg-candidate-box-next');
+    if (isNextBtnElementActive) nextBtnElement.classList.add('hg-candidate-box-btn-active');
 
-    const nextBtnElementClickAction = () => {
+    nextBtnElement.onclick = () => {
       if (!isNextBtnElementActive) return;
-      this.renderPage({
-        candidateListPages,
-        targetElement,
-        pageIndex: pageIndex + 1,
-        nbPages,
-        onItemSelected,
-      });
+      this.renderPage({ candidateListPages, targetElement, pageIndex: pageIndex + 1, nbPages, onItemSelected });
     };
 
-    if(this.options.useTouchEvents) {
-      nextBtnElement.ontouchstart = nextBtnElementClickAction;
-    } else {
-      nextBtnElement.onclick = nextBtnElementClickAction;
-    }
-
+    this.candidateBoxElement.appendChild(prevBtnElement);
+    this.candidateBoxElement.appendChild(candidateListULElement);
     this.candidateBoxElement.appendChild(nextBtnElement);
 
-    // Append candidate box to target element
+    this.candidateBoxElement.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.destroy();
+      }
+    });
+
     targetElement.prepend(this.candidateBoxElement);
+
+    candidateListULElement.focus();
+    this.setupKeyboardNav(candidateListULElement);
+  }
+
+  private setupKeyboardNav(listbox: HTMLUListElement) {
+    this.candidateOptions = Array.from(listbox.querySelectorAll('[role="option"]'));
+    this.candidateOptions.forEach((option, i) => {
+      if (!option.id) option.id = `candidate-${i}`;
+    });
+
+    this.setActiveOption(0);
+
+    listbox.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        this.updateActiveIndex((this.activeIndex + 1) % this.candidateOptions.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        this.updateActiveIndex((this.activeIndex - 1 + this.candidateOptions.length) % this.candidateOptions.length);
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.activateSelectedOption();
+      }
+    });
+  }
+
+  private setActiveOption(index: number): void {
+    this.activeIndex = index;
+    this.updateActiveIndex(index);
+  }
+
+  private updateActiveIndex(newIndex: number): void {
+    const prev = this.candidateOptions[this.activeIndex];
+    const next = this.candidateOptions[newIndex];
+
+    if (prev) {
+      prev.setAttribute('aria-selected', 'false');
+      prev.classList.remove('active');
+    }
+
+    this.activeIndex = newIndex;
+
+    if (next) {
+      next.setAttribute('aria-selected', 'true');
+      next.classList.add('active');
+      next.scrollIntoView({ block: 'nearest' });
+
+      if (!this.candidateBoxElement) return;
+
+      const listbox = this.candidateBoxElement.querySelector('.hg-candidate-box-list');
+      if (listbox) {
+        listbox.setAttribute('aria-activedescendant', next.id);
+      }
+    }
+  }
+
+  private activateSelectedOption(): void {
+    const activeOption = this.candidateOptions[this.activeIndex];
+    if (!activeOption) return;
+
+    // Trigger the click handler manually
+    activeOption.click();
   }
 }
 
