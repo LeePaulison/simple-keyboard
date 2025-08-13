@@ -39,8 +39,9 @@ declare class SimpleKeyboard {
     keyboardRowsDOM: KeyboardElement;
     defaultName: string;
     activeInputElement: HTMLInputElement | HTMLTextAreaElement | null;
+    keyboardInstructions: HTMLElement | null;
+    instructions: string | null;
     listenersAdded: boolean;
-    liveRegion: HTMLElement | null;
     ariaLiveTimer: ReturnType<typeof setTimeout> | null;
     handleKeyDownBound: (event: KeyboardEvent) => void;
     handleInternalKeyNavBound: (event: KeyboardEvent) => void;
@@ -50,11 +51,21 @@ declare class SimpleKeyboard {
     handleTouchEndBound: (event: TouchEvent) => void;
     handleSelectBound: (event: Event) => void;
     handleSelectionChangeBound: (event: Event) => void;
+    NAV_KEYS: Set<string>;
+    MODIFIER_KEYS: Set<string>;
+    NAMED_KEYS_TO_ANNOUNCE: Set<string>;
+    NAMED_READABLE: Record<string, string>;
+    private announcerEl;
     /**
      * Creates an instance of SimpleKeyboard
      * @param {Array} selectorOrOptions If first parameter is a string, it is considered the container class. The second parameter is then considered the options object. If first parameter is an object, it is considered the options object.
      */
     constructor(selectorOrOptions?: string | HTMLDivElement | KeyboardOptions, keyboardOptions?: KeyboardOptions);
+    /**
+     * Accessibility Announcer
+     * This module is responsible for announcing changes in the keyboard state to assistive technologies.
+     */
+    private ensureAnnouncer;
     /**
      * parseParams
      */
@@ -212,6 +223,16 @@ declare class SimpleKeyboard {
      */
     handleKeyDown(event: KeyboardHandlerEvent): void;
     /**
+     * Get the Button Element for Live Region announcements
+     * Backward-compatible entry point; now internally gated.
+     */
+    getButtonAndAnnounce(event: KeyboardEvent): void;
+    /**
+     * WCAG 2.1 Live Region for announcing key focus changes
+     * This is used to announce key focus changes for screen readers
+     */
+    announceLiveRegion(keyLabel: string, context?: string): void;
+    /**
      * Event Handler: Internal Key Navigation
      */
     handleInternalKeyNav(event: KeyboardEvent): void;
@@ -223,6 +244,10 @@ declare class SimpleKeyboard {
      * Find the previous button in the keyboard layout
      */
     findPreviousButton(current: HTMLElement): HTMLElement | null;
+    /**
+     * Find the vertically closest button above or below the current one.
+     */
+    findVerticalButton(current: HTMLElement, direction: 'up' | 'down'): HTMLElement | null;
     /**
      * Event Handler: MouseUp
      */

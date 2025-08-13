@@ -277,4 +277,8 @@ export interface KeyboardOptions {
      * Label for the virtual keyboard container (for screen readers).
      */
     ariaLabel?: string;
+    /**
+     * Instructions for using the virtual keyboard.
+     */
+    instructions?: string;
 }

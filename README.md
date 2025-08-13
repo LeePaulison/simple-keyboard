@@ -7,6 +7,10 @@
 
 <blockquote>Virtual Keyboard for Javascript. Compatible with your JS, React, Angular or Vue projects.</blockquote>
 
+## Note:
+
+This is a fork of simple-keyboard maintained by Advanced Automation Corporation (AAC). It included accessibility enhancements to meet Sectio 508a compliance, as well as functionality changes to meet client requirements.
+
 ## 🚀 Demo
 
 [Demo Showcase (Vanilla, Angular, React, Vue)](https://simple-keyboard.com/demo)
@@ -64,6 +68,7 @@ Want to create your own module? Check out the [Modules page](https://hodgef.com/
 > Note: If you don't want to support old browsers, you can use the Modern Browsers bundle ([index.modern.js](https://github.com/hodgef/simple-keyboard/blob/master/build)).
 
 ## 🔶 Community Libraries & Integrations
+
 Check out useful community modules for simple-keyboard:<br />
 https://github.com/hodgef/simple-keyboard/wiki/Community-Libraries-&-Integrations
 

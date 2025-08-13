@@ -1,7 +1,8 @@
 {
-  "name": "simple-keyboard",
-  "version": "3.8.71",
-  "description": "On-screen Javascript Virtual Keyboard",
+  "name": "@aac/simple-keyboard",
+  "version": "1.0.0",
+  "description": "508a-compliant internal fork of simple-keyboard by Francisco Hodge",
+  "private": true,
   "main": "build/index.js",
   "scripts": {
     "start": "webpack serve --config webpack.config.demo.js",
@@ -17,6 +18,13 @@
     "url": "https://github.com/hodgef/simple-keyboard"
   },
   "author": "Francisco Hodge <hello@franciscohodge.com> (https://github.com/hodgef)",
+  "contributors": [
+    {
+      "name": "Lee Paulison Jr",
+      "email": "lee.paulison@aac-usa.com",
+      "url": "https://github.com/lee-paulison"
+    }
+  ],
   "bugs": {
     "url": "https://github.com/hodgef/simple-keyboard/issues"
   },
@@ -35,7 +43,9 @@
     "touch-screen",
     "kiosk",
     "osk",
-    "js"
+    "js",
+    "508a Compliant",
+    "accessibility"
   ],
   "license": "MIT",
   "devDependencies": {
@@ -111,8 +121,5 @@
       "jsx",
       "node"
     ]
-  },
-  "dependencies": {
-    "simple-keyboard-layouts": "^3.4.120"
   }
 }
