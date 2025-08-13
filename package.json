@@ -4,6 +4,10 @@
   "description": "508a-compliant internal fork of simple-keyboard by Francisco Hodge",
   "private": true,
   "main": "build/index.js",
+  "exports": {
+    ".": "./build/index.js",
+    "./css": "./build/index.css"
+  },
   "scripts": {
     "start": "webpack serve --config webpack.config.demo.js",
     "build": "webpack && npm run build-modern && npm run build-modern-esm && tsc",
