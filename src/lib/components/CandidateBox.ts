@@ -11,6 +11,7 @@ class CandidateBox {
   private activeIndex = 0;
   private candidateOptions: HTMLLIElement[] = [];
   private globalLiveRegionElement: HTMLElement | null = document.querySelector('.hg-live-region');
+  static isOpen = false;
 
   constructor({ utilities, options }: CandidateBoxParams) {
     this.utilities = utilities;
@@ -21,8 +22,13 @@ class CandidateBox {
 
   destroy(): void {
     if (this.candidateBoxElement) {
-      this.candidateBoxElement.remove();
-      this.candidateBoxElement = null;
+      setTimeout(() => {
+        if (this.candidateBoxElement) {
+          this.candidateBoxElement.remove();
+          this.candidateBoxElement = null;
+        }
+        CandidateBox.isOpen = false;
+      }, 30);
     }
 
     this.activeIndex = 0;
@@ -52,6 +58,8 @@ class CandidateBox {
         this.destroy();
       },
     });
+
+    CandidateBox.isOpen = true;
   }
 
   renderPage({ candidateListPages, targetElement, pageIndex, nbPages, onItemSelected }: CandidateBoxRenderParams) {
@@ -80,10 +88,22 @@ class CandidateBox {
         return mouseEvent;
       };
 
+      candidateListLIElement.onclick = (e = getMouseEvent() as MouseEvent) => {
+        if (this.globalLiveRegionElement) {
+          const label = candidateListLIElement.textContent?.trim();
+          this.globalLiveRegionElement.textContent = `Inserted: ${label}`;
+        }
+        onItemSelected(candidateListItem, e);
+      };
+
       if (this.options.useTouchEvents) {
-        candidateListLIElement.ontouchstart = (e: any) => onItemSelected(candidateListItem, e || getMouseEvent());
-      } else {
-        candidateListLIElement.onclick = (e = getMouseEvent() as MouseEvent) => onItemSelected(candidateListItem, e);
+        candidateListLIElement.ontouchstart = (e: any) => {
+          if (this.globalLiveRegionElement) {
+            const label = candidateListLIElement.textContent?.trim();
+            this.globalLiveRegionElement.textContent = `Inserted: ${label}`;
+          }
+          onItemSelected(candidateListItem, e || getMouseEvent());
+        };
       }
 
       candidateListULElement.appendChild(candidateListLIElement);
@@ -188,7 +208,13 @@ class CandidateBox {
     const activeOption = this.candidateOptions[this.activeIndex];
     if (!activeOption) return;
 
-    // Trigger the click handler manually
+    // ✅ Update live region before triggering the click
+    if (this.globalLiveRegionElement) {
+      const label = activeOption.textContent?.trim();
+      this.globalLiveRegionElement.textContent = `Inserted: ${label}`;
+    }
+
+    // ✅ Then trigger selection
     activeOption.click();
   }
 }

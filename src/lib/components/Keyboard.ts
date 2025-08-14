@@ -1227,6 +1227,15 @@ class SimpleKeyboard {
    * Event Handler: KeyDown
    */
   handleKeyDown(event: KeyboardHandlerEvent): void {
+    // eslint-disable-next-line no-debugger
+    // debugger;
+
+    const shouldSuppressKeyAnnounce = CandidateBox.isOpen;
+    if (shouldSuppressKeyAnnounce) {
+      console.log('CandidateBox is open');
+      return; // Let CandidateBox handle all announcements
+    }
+
     const bypassKeys = new Set(['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', ' ', 'Spacebar']);
 
     if (
