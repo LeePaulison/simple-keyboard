@@ -67,6 +67,36 @@ class CandidateBox {
 
     this.candidateBoxElement = document.createElement('div');
     this.candidateBoxElement.className = 'hg-candidate-box';
+    this.candidateBoxElement.setAttribute('role', 'dialog');
+    this.candidateBoxElement.setAttribute('aria-label', 'Character Suggestions');
+    this.candidateBoxElement.setAttribute('aria-describedby', 'candidate-box-instructions');
+
+    this.candidateBoxElement.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const focusable = this.candidateBoxElement?.querySelectorAll<HTMLElement>(
+        '[tabindex]:not([tabindex="-1"]), button, [href], input, select, textarea'
+      );
+
+      if (!focusable?.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+
+    const instructionsElement = document.createElement('div');
+    instructionsElement.id = 'candidate-box-instructions';
+    instructionsElement.classList.add('hg-candidate-box-instructions', 'sr-only');
+    instructionsElement.innerHTML = 'Use up and down arrow keys to navigate, Enter to select.';
+    this.candidateBoxElement.appendChild(instructionsElement);
 
     const candidateListULElement = document.createElement('ul');
     candidateListULElement.className = 'hg-candidate-box-list';
