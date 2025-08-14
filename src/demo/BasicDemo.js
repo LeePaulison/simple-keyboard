@@ -19,6 +19,8 @@ class Demo {
       onChange: this.onChange,
       onKeyPress: this.onKeyPress,
       useMouseEvents: true,
+      physicalKeyboardHighlight: true,
+      physicalKeyboardHighlightPress: true,
     });
 
     /**

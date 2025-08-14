@@ -1187,6 +1187,28 @@ class SimpleKeyboard {
   }
 
   /**
+   * Event Debug Logger
+   */
+  logEventType(tag: string, event: Event) {
+    console.log(`[${tag}] Event type:`, event.type, '→', event.constructor.name);
+  }
+
+  isSupportedEvent(event: Event): boolean {
+    return (
+      event instanceof KeyboardEvent ||
+      event instanceof MouseEvent ||
+      event instanceof TouchEvent ||
+      event instanceof PointerEvent
+    );
+  }
+
+  handleGetButtonAndAnnounce(event: KeyboardHandlerEvent): void {
+    if (!this.isSupportedEvent(event)) return;
+    console.log('I am handling get button and announce');
+    this.getButtonAndAnnounce(event);
+  }
+
+  /**
    * Event Handler: KeyUp
    */
   handleKeyUp(event: KeyboardHandlerEvent): void {
@@ -1205,50 +1227,85 @@ class SimpleKeyboard {
    * Event Handler: KeyDown
    */
   handleKeyDown(event: KeyboardHandlerEvent): void {
-    if (this.options.physicalKeyboardHighlightPreventDefault) {
+    const bypassKeys = new Set(['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', ' ', 'Spacebar']);
+
+    if (
+      this.options.physicalKeyboardHighlightPreventDefault &&
+      event instanceof KeyboardEvent &&
+      !bypassKeys.has(event.key)
+    ) {
       event.preventDefault();
     }
+
+    if (event instanceof KeyboardEvent && (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar')) {
+      const active = document.activeElement as HTMLElement;
+
+      if (active?.hasAttribute('data-skbtn')) {
+        const buttonLabel =
+          active.getAttribute('data-skbtn') || active.getAttribute('aria-label') || active.textContent?.trim();
+
+        if (buttonLabel) {
+          event.preventDefault(); // block scroll/submit
+          console.log('[SIMULATE] Virtual key press:', buttonLabel);
+          this.handleButtonClicked(buttonLabel, event); // 🔥 this is what onKeyPress uses internally
+        }
+      }
+    }
+
+    this.logEventType('Keyboard', event);
 
     if (this.options.physicalKeyboardHighlight) {
       this.physicalKeyboard.handleHighlightKeyDown(event);
     }
 
-    if (!(event instanceof KeyboardEvent)) return;
-    this.getButtonAndAnnounce(event);
+    this.handleGetButtonAndAnnounce(event);
+  }
+
+  getAnnounceLabel(pressedKey: string): string | null {
+    const isNamedKey = this.NAMED_KEYS_TO_ANNOUNCE.has(pressedKey);
+    const isPrintable = pressedKey.length === 1;
+
+    const focused = document.activeElement as HTMLElement;
+    const focusedLabel =
+      focused?.getAttribute('aria-label') || focused?.textContent?.trim() || focused?.getAttribute('data-skbtn');
+
+    if (isNamedKey && focusedLabel && focusedLabel !== pressedKey) {
+      return focusedLabel;
+    }
+
+    if (!isPrintable && !isNamedKey) return null;
+
+    return this.NAMED_READABLE[pressedKey] || pressedKey;
   }
 
   /**
    * Get the Button Element for Live Region announcements
    * Backward-compatible entry point; now internally gated.
    */
-  getButtonAndAnnounce(event: KeyboardEvent): void {
-    if (!(event instanceof KeyboardEvent)) return;
-    if (event.isComposing) return; // IME composition: no announce
-    if (event.repeat) return; // optional: suppress held-key spam
+  getButtonAndAnnounce(event: Event): void {
+    if (!this.isSupportedEvent(event)) return;
 
-    const pressedKey = event.key;
+    let pressedKey: string | null = null;
 
-    // 1) Hard gate: no announce on navigation or pure modifiers
-    if (this.NAV_KEYS.has(pressedKey) || this.MODIFIER_KEYS.has(pressedKey)) return;
+    // 1. KeyboardEvent path
+    if (event instanceof KeyboardEvent) {
+      if (event.isComposing || event.repeat) return;
+      pressedKey = event.key;
+    }
 
-    // 2) Only allow printable chars (no modifier chords) or whitelisted named keys
-    const isPrintable = pressedKey?.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
+    // 2. Pointer/touch path
+    if (event instanceof MouseEvent || event instanceof PointerEvent || event instanceof TouchEvent) {
+      const target = (event.target as HTMLElement)?.closest?.('[data-skbtn]');
+      if (!target || !this.keyboardDOM.contains(target)) return;
 
-    const isNamedAllowed = this.NAMED_KEYS_TO_ANNOUNCE.has(pressedKey);
+      pressedKey = target.getAttribute('aria-label') || target.textContent?.trim() || target.getAttribute('data-skbtn');
+    }
 
-    if (!isPrintable && !isNamedAllowed) return;
+    if (!pressedKey) return;
 
-    // 3) Resolve the key label from the element (works for both click + physical)
-    if (!this.keyboardDOM.contains(event.target as Node)) return;
-    const buttonEl = event.target as KeyboardElement;
+    const label = this.getAnnounceLabel(pressedKey);
+    if (!label) return;
 
-    // Prefer aria-label; fall back to trimmed textContent
-    const rawLabel =
-      buttonEl.getAttribute('aria-label') || (buttonEl.textContent || '').trim() || pressedKey || 'Unknown Key';
-
-    const label = this.NAMED_READABLE[rawLabel] || rawLabel;
-
-    // 4) Context: use "pressed" by default
     this.announceLiveRegion(label, 'pressed');
   }
 
@@ -1259,6 +1316,11 @@ class SimpleKeyboard {
 
   announceLiveRegion(keyLabel: string, context = 'pressed'): void {
     if (!this.options.useLiveRegion || !this.announcerEl) return;
+
+    console.log('[Announce] Fired:', {
+      keyLabel,
+      context,
+    });
 
     if (this.ariaLiveTimer) clearTimeout(this.ariaLiveTimer);
 
@@ -1378,8 +1440,9 @@ class SimpleKeyboard {
   handleMouseUp(event: KeyboardHandlerEvent): void {
     this.caretEventHandler(event);
 
-    if (!(event instanceof KeyboardEvent)) return;
-    this.getButtonAndAnnounce(event);
+    this.logEventType('Mouse', event);
+
+    this.handleGetButtonAndAnnounce(event);
   }
 
   /**
@@ -1389,8 +1452,9 @@ class SimpleKeyboard {
   handleTouchEnd(event: KeyboardHandlerEvent): void {
     this.caretEventHandler(event);
 
-    if (!(event instanceof KeyboardEvent)) return;
-    this.getButtonAndAnnounce(event);
+    this.logEventType('Touch', event);
+
+    this.handleGetButtonAndAnnounce(event);
   }
 
   /**

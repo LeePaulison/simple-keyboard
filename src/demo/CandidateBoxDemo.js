@@ -18,6 +18,7 @@ class Demo {
     this.keyboard = new Keyboard({
       onChange: (input) => this.onChange(input),
       onKeyPress: (button) => this.onKeyPress(button),
+      useMouseEvents: true,
       preventMouseDownDefault: true,
       layoutCandidatesPageSize: 15,
       layoutCandidates: {
@@ -26,7 +27,7 @@ class Demo {
       },
       physicalKeyboardHighlight: true,
       physicalKeyboardHighlightPress: true,
-      physicalKeyboardHighlightPreventDefault: true,
+      // physicalKeyboardHighlightPreventDefault: true,
     });
 
     /**

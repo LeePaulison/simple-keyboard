@@ -6,7 +6,8 @@
   "main": "build/index.js",
   "exports": {
     ".": "./build/index.js",
-    "./css": "./build/index.css"
+    "./build/index.modern": "./build/index.modern.js",
+    "./css": "./build/css/index.css"
   },
   "scripts": {
     "start": "webpack serve --config webpack.config.demo.js",
