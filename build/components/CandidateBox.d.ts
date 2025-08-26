@@ -10,6 +10,7 @@ declare class CandidateBox {
     private activeIndex;
     private candidateOptions;
     private globalLiveRegionElement;
+    static isOpen: boolean;
     constructor({ utilities, options }: CandidateBoxParams);
     destroy(): void;
     show({ candidateValue, targetElement, onSelect }: CandidateBoxShowParams): void;

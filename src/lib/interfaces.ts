@@ -344,4 +344,9 @@ export interface KeyboardOptions {
    * Instructions for using the virtual keyboard.
    */
   instructions?: string;
+
+  /**
+   * Automatically focus the first key when the keyboard is rendered.
+   */
+  autoFocus?: boolean;
 }

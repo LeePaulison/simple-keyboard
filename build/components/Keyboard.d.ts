@@ -219,6 +219,12 @@ declare class SimpleKeyboard {
      */
     setEventListeners(): void;
     /**
+     * Event Debug Logger
+     */
+    logEventType(tag: string, event: Event): void;
+    isSupportedEvent(event: Event): boolean;
+    handleGetButtonAndAnnounce(event: KeyboardHandlerEvent): void;
+    /**
      * Event Handler: KeyUp
      */
     handleKeyUp(event: KeyboardHandlerEvent): void;
@@ -226,11 +232,12 @@ declare class SimpleKeyboard {
      * Event Handler: KeyDown
      */
     handleKeyDown(event: KeyboardHandlerEvent): void;
+    getAnnounceLabel(pressedKey: string): string | null;
     /**
      * Get the Button Element for Live Region announcements
      * Backward-compatible entry point; now internally gated.
      */
-    getButtonAndAnnounce(event: KeyboardEvent): void;
+    getButtonAndAnnounce(event: Event): void;
     /**
      * WCAG 2.1 Live Region for announcing key focus changes
      * This is used to announce key focus changes for screen readers

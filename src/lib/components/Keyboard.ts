@@ -46,6 +46,7 @@ class SimpleKeyboard {
   defaultName = 'default';
   activeInputElement: HTMLInputElement | HTMLTextAreaElement | null = null;
   keyboardInstructions: HTMLElement | null = null;
+  keyboardHeader: HTMLElement | null = null;
   instructions: string | null = null;
   listenersAdded = false;
   ariaLiveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -1246,7 +1247,8 @@ class SimpleKeyboard {
       event.preventDefault();
     }
 
-    if (event instanceof KeyboardEvent && (event.key === 'Enter' || event.key === ' ' || event.key === 'Spacebar')) {
+    // Only use Enter key for virtual button activation to avoid conflicts with physical keyboard
+    if (event instanceof KeyboardEvent && event.key === 'Enter') {
       const active = document.activeElement as HTMLElement;
 
       if (active?.hasAttribute('data-skbtn')) {
@@ -1254,9 +1256,9 @@ class SimpleKeyboard {
           active.getAttribute('data-skbtn') || active.getAttribute('aria-label') || active.textContent?.trim();
 
         if (buttonLabel) {
-          event.preventDefault(); // block scroll/submit
+          event.preventDefault(); // Prevent form submission
           console.log('[SIMULATE] Virtual key press:', buttonLabel);
-          this.handleButtonClicked(buttonLabel, event); // 🔥 this is what onKeyPress uses internally
+          this.handleButtonClicked(buttonLabel, event);
         }
       }
     }
@@ -1268,6 +1270,33 @@ class SimpleKeyboard {
     }
 
     this.handleGetButtonAndAnnounce(event);
+  }
+
+  /**
+   * Check if the physical key pressed matches the button that would be triggered
+   * by the physical keyboard system. This prevents double triggering.
+   */
+  isPhysicalKeyMatchingButton(event: KeyboardEvent, buttonLabel: string): boolean {
+    // For space keys, only match if we're on the spacebar button
+    if (event.key === ' ' || event.key === 'Spacebar') {
+      return buttonLabel === '{space}' || buttonLabel.toLowerCase().includes('space');
+    }
+
+    // For other keys, we need to check if the physical key would trigger this exact button
+    // This is a simplified check - in reality, the PhysicalKeyboard service has complex mapping logic
+    // But for our use case, we mainly care about preventing space key double-triggering
+    
+    // For standard alphanumeric characters
+    if (event.key.length === 1) {
+      return buttonLabel === event.key.toLowerCase() || buttonLabel === event.key.toUpperCase();
+    }
+
+    // For special keys like Enter
+    if (event.key === 'Enter') {
+      return buttonLabel === '{enter}' || buttonLabel.toLowerCase().includes('enter');
+    }
+
+    return false;
   }
 
   getAnnounceLabel(pressedKey: string): string | null {
@@ -1360,7 +1389,7 @@ class SimpleKeyboard {
     const focused = document.activeElement as HTMLElement;
 
     // Find the currently focused button
-    if (!focused || !focused.hasAttribute('data-skBtn')) return;
+    if (!focused || !focused.hasAttribute('data-skbtn')) return;
 
     // Implement directional logic
     let nextButton: HTMLElement | null = null;
@@ -1843,6 +1872,44 @@ class SimpleKeyboard {
     const announcers = document.querySelectorAll('.hg-live-region');
     console.debug('[a11y] on Render announcers:', announcers.length, announcers);
     console.debug('[a11y] on Render announcerConnected:', !!(this.announcerEl && this.announcerEl.isConnected));
+
+    // Handle autoFocus after DOM is fully rendered
+    if (this.options.autoFocus) {
+      this.handleAutoFocus();
+    }
+  }
+
+  /**
+   * Handles automatic focus to the first key when autoFocus option is enabled
+   */
+  handleAutoFocus(): void {
+    // Use requestAnimationFrame to ensure DOM is fully rendered
+    requestAnimationFrame(() => {
+      const firstFocusableButton = this.keyboardDOM.querySelector('[data-skBtn][tabindex="0"]') as HTMLElement;
+      
+      if (firstFocusableButton) {
+        firstFocusableButton.focus();
+        
+        if (this.options.debug) {
+          console.log('AutoFocus: Focused first keyboard button', firstFocusableButton);
+        }
+      } else {
+        // Fallback: Find any button with tabindex="0" or the first button
+        const fallbackButton = 
+          this.keyboardDOM.querySelector('[data-skBtn][tabindex="0"]') as HTMLElement ||
+          this.keyboardDOM.querySelector('[data-skBtn]') as HTMLElement;
+          
+        if (fallbackButton) {
+          // Make sure it's focusable
+          fallbackButton.setAttribute('tabindex', '0');
+          fallbackButton.focus();
+          
+          if (this.options.debug) {
+            console.log('AutoFocus: Focused fallback keyboard button', fallbackButton);
+          }
+        }
+      }
+    });
   }
 
   /**
@@ -2067,7 +2134,14 @@ class SimpleKeyboard {
 
     this.instructions =
       this.options.instructions ||
-      'Arrow keys navigate left, right, up, and down.  Enter or Space to select. Tab to exit keyboard.';
+      'Arrow keys navigate. Enter to select. Tab to exit keyboard, Shift+Tab to return.';
+
+    // Add layout header for context
+    this.keyboardHeader = document.createElement('h2');
+    this.keyboardHeader.classList.add('hg-header', 'sr-only');
+    this.keyboardHeader.id = 'hg-virtual-keyboard-header';
+    this.keyboardHeader.textContent = 'QWERTY Virtual Keyboard';
+    this.keyboardDOM.appendChild(this.keyboardHeader);
 
     this.keyboardInstructions = document.createElement('p');
     this.keyboardInstructions.classList.add('hg-instructions', 'sr-only');
@@ -2075,6 +2149,9 @@ class SimpleKeyboard {
     this.keyboardInstructions.setAttribute('role', 'note');
     this.keyboardInstructions.textContent = this.instructions;
     this.keyboardDOM.appendChild(this.keyboardInstructions);
+    
+    // Update ARIA attributes to reference both header and instructions
+    this.keyboardDOM.setAttribute('aria-labelledby', this.keyboardHeader.id);
     this.keyboardDOM.setAttribute('aria-describedby', this.keyboardInstructions.id);
 
     /**
