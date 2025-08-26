@@ -1317,13 +1317,65 @@ class SimpleKeyboard {
   }
 
   /**
+   * Determine if announcements should be suppressed based on current context
+   */
+  shouldSuppressAnnouncements(): boolean {
+    // Always respect the useLiveRegion setting
+    if (!this.options.useLiveRegion) return true;
+
+    // Respect announcement mode
+    const announceMode = this.options.liveRegionAnnounceMode || 'actions';
+    if (announceMode === 'none') return true;
+
+    // Check if we should suppress when input is focused
+    if (this.options.suppressAnnouncementsOnInputFocus) {
+      const activeElement = document.activeElement;
+      if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Get the content result for a button press (for content-mode announcements)
+   */
+  getContentForButton(buttonLabel: string): string | null {
+    // Handle special buttons
+    if (buttonLabel === '{space}') return 'space';
+    if (buttonLabel === '{enter}') return 'new line';
+    if (buttonLabel === '{bksp}' || buttonLabel === '{backspace}') return 'deleted';
+    if (buttonLabel === '{tab}') return 'tab';
+    if (buttonLabel === '{delete}') return 'deleted';
+    
+    // For regular character buttons, return the character itself
+    if (buttonLabel.length === 1) {
+      return buttonLabel;
+    }
+    
+    // For other special buttons, try to get display name
+    const displayName = this.utilities.getButtonDisplayName(
+      buttonLabel,
+      this.options.display,
+      this.options.mergeDisplay
+    );
+    
+    return displayName !== buttonLabel ? displayName : null;
+  }
+
+  /**
    * Get the Button Element for Live Region announcements
    * Backward-compatible entry point; now internally gated.
    */
   getButtonAndAnnounce(event: Event): void {
     if (!this.isSupportedEvent(event)) return;
 
+    // Check if announcements should be suppressed
+    if (this.shouldSuppressAnnouncements()) return;
+
     let pressedKey: string | null = null;
+    let buttonLabel: string | null = null;
 
     // 1. KeyboardEvent path
     if (event instanceof KeyboardEvent) {
@@ -1336,15 +1388,34 @@ class SimpleKeyboard {
       const target = (event.target as HTMLElement)?.closest?.('[data-skbtn]');
       if (!target || !this.keyboardDOM.contains(target)) return;
 
-      pressedKey = target.getAttribute('aria-label') || target.textContent?.trim() || target.getAttribute('data-skbtn');
+      buttonLabel = target.getAttribute('data-skbtn');
+      pressedKey = target.getAttribute('aria-label') || target.textContent?.trim() || buttonLabel;
     }
 
     if (!pressedKey) return;
 
-    const label = this.getAnnounceLabel(pressedKey);
-    if (!label) return;
+    const announceMode = this.options.liveRegionAnnounceMode || 'actions';
+    
+    if (announceMode === 'none') return;
 
-    this.announceLiveRegion(label, 'pressed');
+    // Announce button action
+    if (announceMode === 'actions' || announceMode === 'both') {
+      const actionLabel = this.getAnnounceLabel(pressedKey);
+      if (actionLabel) {
+        this.announceLiveRegion(actionLabel, 'pressed');
+      }
+    }
+
+    // Announce content result
+    if ((announceMode === 'content' || announceMode === 'both') && buttonLabel) {
+      const contentResult = this.getContentForButton(buttonLabel);
+      if (contentResult) {
+        // Small delay to avoid conflicts with action announcement
+        setTimeout(() => {
+          this.announceLiveRegion(contentResult, '');
+        }, announceMode === 'both' ? 200 : 0);
+      }
+    }
   }
 
   /**
@@ -1815,6 +1886,11 @@ class SimpleKeyboard {
      */
     this.setEventListeners();
 
+    // Handle autoFocus after full initialization - ensures DOM is complete and painted
+    if (this.options.autoFocus) {
+      this.handleAutoFocus();
+    }
+
     if (typeof this.options.onInit === 'function') this.options.onInit(this);
   }
 
@@ -1872,44 +1948,46 @@ class SimpleKeyboard {
     const announcers = document.querySelectorAll('.hg-live-region');
     console.debug('[a11y] on Render announcers:', announcers.length, announcers);
     console.debug('[a11y] on Render announcerConnected:', !!(this.announcerEl && this.announcerEl.isConnected));
-
-    // Handle autoFocus after DOM is fully rendered
-    if (this.options.autoFocus) {
-      this.handleAutoFocus();
-    }
   }
 
   /**
    * Handles automatic focus to the first key when autoFocus option is enabled
+   * Called from onInit to ensure DOM is fully complete and painted
    */
   handleAutoFocus(): void {
-    // Use requestAnimationFrame to ensure DOM is fully rendered
-    requestAnimationFrame(() => {
-      const firstFocusableButton = this.keyboardDOM.querySelector('[data-skBtn][tabindex="0"]') as HTMLElement;
-      
-      if (firstFocusableButton) {
-        firstFocusableButton.focus();
+    // Double-buffer with setTimeout + requestAnimationFrame to ensure DOM is fully painted
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        const firstFocusableButton = this.keyboardDOM.querySelector('[data-skBtn][tabindex="0"]') as HTMLElement;
         
-        if (this.options.debug) {
-          console.log('AutoFocus: Focused first keyboard button', firstFocusableButton);
-        }
-      } else {
-        // Fallback: Find any button with tabindex="0" or the first button
-        const fallbackButton = 
-          this.keyboardDOM.querySelector('[data-skBtn][tabindex="0"]') as HTMLElement ||
-          this.keyboardDOM.querySelector('[data-skBtn]') as HTMLElement;
-          
-        if (fallbackButton) {
-          // Make sure it's focusable
-          fallbackButton.setAttribute('tabindex', '0');
-          fallbackButton.focus();
+        if (firstFocusableButton) {
+          firstFocusableButton.focus();
           
           if (this.options.debug) {
-            console.log('AutoFocus: Focused fallback keyboard button', fallbackButton);
+            console.log('AutoFocus: Focused first keyboard button');
+          }
+        } else {
+          // Fallback: Find any button with tabindex="0" or the first button
+          const fallbackButton = 
+            this.keyboardDOM.querySelector('[data-skBtn][tabindex="0"]') as HTMLElement ||
+            this.keyboardDOM.querySelector('[data-skBtn]') as HTMLElement;
+            
+          if (fallbackButton) {
+            // Make sure it's focusable
+            fallbackButton.setAttribute('tabindex', '0');
+            fallbackButton.focus();
+            
+            if (this.options.debug) {
+              console.log('AutoFocus: Focused fallback keyboard button');
+            }
+          } else {
+            if (this.options.debug) {
+              console.warn('AutoFocus: No keyboard buttons found for focus!');
+            }
           }
         }
-      }
-    });
+      });
+    }, 0);
   }
 
   /**

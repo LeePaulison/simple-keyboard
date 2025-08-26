@@ -14,7 +14,7 @@ import CandidateBoxDemo from './CandidateBoxDemo';
 /**
  * Selected demo
  */
-const SELECTED_DEMO = CandidateBoxDemo;
+const SELECTED_DEMO = BasicDemo;
 
 /**
  * Bootstrap

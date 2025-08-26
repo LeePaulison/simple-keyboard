@@ -281,4 +281,21 @@ export interface KeyboardOptions {
      * Instructions for using the virtual keyboard.
      */
     instructions?: string;
+    /**
+     * Automatically focus the first key when the keyboard is rendered.
+     */
+    autoFocus?: boolean;
+    /**
+     * Control what the keyboard announces via live regions.
+     * - 'actions': Announce button presses ("Key q pressed") - good when editor handles content announcements
+     * - 'content': Announce resulting characters ("q") - good when editor is silent
+     * - 'both': Announce both actions and content - may cause duplicates with some editors
+     * - 'none': No live region announcements from keyboard
+     */
+    liveRegionAnnounceMode?: 'actions' | 'content' | 'both' | 'none';
+    /**
+     * When true, suppresses live region announcements when focus is on a text input.
+     * This prevents conflicts when the input field handles its own announcements.
+     */
+    suppressAnnouncementsOnInputFocus?: boolean;
 }

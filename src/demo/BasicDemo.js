@@ -21,6 +21,8 @@ class Demo {
       useMouseEvents: true,
       physicalKeyboardHighlight: true,
       physicalKeyboardHighlightPress: true,
+      autoFocus: true,
+      debug: true,
     });
 
     /**

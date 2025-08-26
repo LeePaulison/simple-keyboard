@@ -28,7 +28,7 @@ class Demo {
       physicalKeyboardHighlight: true,
       physicalKeyboardHighlightPress: true,
       // physicalKeyboardHighlightPreventDefault: true,
-      autofocus: true,
+      autoFocus: true,
     });
 
     /**

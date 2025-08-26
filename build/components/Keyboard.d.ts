@@ -40,6 +40,7 @@ declare class SimpleKeyboard {
     defaultName: string;
     activeInputElement: HTMLInputElement | HTMLTextAreaElement | null;
     keyboardInstructions: HTMLElement | null;
+    keyboardHeader: HTMLElement | null;
     instructions: string | null;
     listenersAdded: boolean;
     ariaLiveTimer: ReturnType<typeof setTimeout> | null;
@@ -232,7 +233,20 @@ declare class SimpleKeyboard {
      * Event Handler: KeyDown
      */
     handleKeyDown(event: KeyboardHandlerEvent): void;
+    /**
+     * Check if the physical key pressed matches the button that would be triggered
+     * by the physical keyboard system. This prevents double triggering.
+     */
+    isPhysicalKeyMatchingButton(event: KeyboardEvent, buttonLabel: string): boolean;
     getAnnounceLabel(pressedKey: string): string | null;
+    /**
+     * Determine if announcements should be suppressed based on current context
+     */
+    shouldSuppressAnnouncements(): boolean;
+    /**
+     * Get the content result for a button press (for content-mode announcements)
+     */
+    getContentForButton(buttonLabel: string): string | null;
     /**
      * Get the Button Element for Live Region announcements
      * Backward-compatible entry point; now internally gated.
@@ -320,6 +334,11 @@ declare class SimpleKeyboard {
      * Executes the callback function every time simple-keyboard is rendered (e.g: when you change layouts).
      */
     onRender(): void;
+    /**
+     * Handles automatic focus to the first key when autoFocus option is enabled
+     * Called from onInit to ensure DOM is fully complete and painted
+     */
+    handleAutoFocus(): void;
     /**
      * Executes the callback function once all modules have been loaded
      */

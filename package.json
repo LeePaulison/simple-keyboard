@@ -1,6 +1,6 @@
 {
   "name": "@aac/simple-keyboard",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "508a-compliant internal fork of simple-keyboard by Francisco Hodge",
   "private": true,
   "main": "build/index.js",
