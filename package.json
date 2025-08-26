@@ -26,12 +26,11 @@
   "contributors": [
     {
       "name": "Lee Paulison Jr",
-      "email": "lee.paulison@aac-usa.com",
-      "url": "https://github.com/lee-paulison"
+      "email": "lee.paulison@aac-usa.com"
     }
   ],
   "bugs": {
-    "url": "https://github.com/hodgef/simple-keyboard/issues"
+    "email": "sean.dooley@aac-usa.com"
   },
   "homepage": "https://virtual-keyboard.js.org/",
   "keywords": [
