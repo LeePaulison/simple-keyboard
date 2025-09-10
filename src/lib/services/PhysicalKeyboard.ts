@@ -357,21 +357,21 @@ class PhysicalKeyboard {
     }
 
     // unmapped key — log it and return blank
-    console.warn('[simple-keyboard][Edge Case Triggered] Unmapped key event:', {
-      code: e.code,
-      key: e.key,
-      keyCode: e.keyCode,
-      layoutJSON: this.layoutJSON,
-      userAgent: navigator.userAgent, // Browser + OS info
-      platform: navigator.platform, // OS-level platform
-      language: navigator.language, // Active input language (e.g., "ko-KR")
-      imeMode:
-        document.activeElement && 'inputMode' in document.activeElement
-          ? (document.activeElement as HTMLInputElement | HTMLTextAreaElement).inputMode
-          : 'unknown', // Input method
-      isEditable: (document.activeElement as HTMLElement)?.isContentEditable || false, // Useful for composition
-      time: new Date().toISOString(),
-    });
+    // console.warn('[simple-keyboard][Edge Case Triggered] Unmapped key event:', {
+    //   code: e.code,
+    //   key: e.key,
+    //   keyCode: e.keyCode,
+    //   layoutJSON: this.layoutJSON,
+    //   userAgent: navigator.userAgent, // Browser + OS info
+    //   platform: navigator.platform, // OS-level platform
+    //   language: navigator.language, // Active input language (e.g., "ko-KR")
+    //   imeMode:
+    //     document.activeElement && 'inputMode' in document.activeElement
+    //       ? (document.activeElement as HTMLInputElement | HTMLTextAreaElement).inputMode
+    //       : 'unknown', // Input method
+    //   isEditable: (document.activeElement as HTMLElement)?.isContentEditable || false, // Useful for composition
+    //   time: new Date().toISOString(),
+    // });
 
     return '';
   }

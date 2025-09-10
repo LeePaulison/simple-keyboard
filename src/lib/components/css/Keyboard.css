@@ -121,6 +121,15 @@
   max-width: 60px;
 }
 
+.hg-theme-default .hg-button[aria-selected='true'] {
+  background: rgba(5, 25, 70, 0.53);
+  color: white;
+}
+
+.hg-theme-default .hg-button:focus-visible {
+  outline: unset;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

@@ -9,7 +9,7 @@ import BasicDemo from './BasicDemo';
 //import DOMElementDemo from "./DOMElementDemo";
 //import FullKeyboardDemo from "./FullKeyboardDemo";
 //import MultipleKeyboardsDemo from "./MultipleKeyboardsDestroyDemo";
-import CandidateBoxDemo from './CandidateBoxDemo';
+// import CandidateBoxDemo from './CandidateBoxDemo';
 
 /**
  * Selected demo

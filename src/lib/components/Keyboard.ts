@@ -1163,7 +1163,7 @@ class SimpleKeyboard {
       // LPJr: added named event handlers instead of anonymous functions
       this.handleKeyDownBound = this.handleKeyDown.bind(this);
       this.handleInternalKeyNavBound = this.handleInternalKeyNav.bind(this);
-      this.keyboardDOM.addEventListener('keydown', this.handleInternalKeyNavBound as EventListener);
+      document.addEventListener('keydown', this.handleInternalKeyNavBound as EventListener);
 
       this.handleKeyUpBound = this.handleKeyUp.bind(this);
       this.handleMouseUpBound = this.handleMouseUp.bind(this);
@@ -1233,7 +1233,6 @@ class SimpleKeyboard {
 
     const shouldSuppressKeyAnnounce = CandidateBox.isOpen;
     if (shouldSuppressKeyAnnounce) {
-      console.log('CandidateBox is open');
       return; // Let CandidateBox handle all announcements
     }
 
@@ -1249,7 +1248,7 @@ class SimpleKeyboard {
 
     // Only use Enter key for virtual button activation to avoid conflicts with physical keyboard
     if (event instanceof KeyboardEvent && event.key === 'Enter') {
-      const active = document.activeElement as HTMLElement;
+      const active = this.keyboardDOM.querySelector('.hg-button[aria-selected="true"]') as HTMLElement;
 
       if (active?.hasAttribute('data-skbtn')) {
         const buttonLabel =
@@ -1257,7 +1256,6 @@ class SimpleKeyboard {
 
         if (buttonLabel) {
           event.preventDefault(); // Prevent form submission
-          console.log('[SIMULATE] Virtual key press:', buttonLabel);
           this.handleButtonClicked(buttonLabel, event);
         }
       }
@@ -1285,7 +1283,7 @@ class SimpleKeyboard {
     // For other keys, we need to check if the physical key would trigger this exact button
     // This is a simplified check - in reality, the PhysicalKeyboard service has complex mapping logic
     // But for our use case, we mainly care about preventing space key double-triggering
-    
+
     // For standard alphanumeric characters
     if (event.key.length === 1) {
       return buttonLabel === event.key.toLowerCase() || buttonLabel === event.key.toUpperCase();
@@ -1348,19 +1346,19 @@ class SimpleKeyboard {
     if (buttonLabel === '{bksp}' || buttonLabel === '{backspace}') return 'deleted';
     if (buttonLabel === '{tab}') return 'tab';
     if (buttonLabel === '{delete}') return 'deleted';
-    
+
     // For regular character buttons, return the character itself
     if (buttonLabel.length === 1) {
       return buttonLabel;
     }
-    
+
     // For other special buttons, try to get display name
     const displayName = this.utilities.getButtonDisplayName(
       buttonLabel,
       this.options.display,
       this.options.mergeDisplay
     );
-    
+
     return displayName !== buttonLabel ? displayName : null;
   }
 
@@ -1395,7 +1393,7 @@ class SimpleKeyboard {
     if (!pressedKey) return;
 
     const announceMode = this.options.liveRegionAnnounceMode || 'actions';
-    
+
     if (announceMode === 'none') return;
 
     // Announce button action
@@ -1411,9 +1409,12 @@ class SimpleKeyboard {
       const contentResult = this.getContentForButton(buttonLabel);
       if (contentResult) {
         // Small delay to avoid conflicts with action announcement
-        setTimeout(() => {
-          this.announceLiveRegion(contentResult, '');
-        }, announceMode === 'both' ? 200 : 0);
+        setTimeout(
+          () => {
+            this.announceLiveRegion(contentResult, '');
+          },
+          announceMode === 'both' ? 200 : 0
+        );
       }
     }
   }
@@ -1425,11 +1426,6 @@ class SimpleKeyboard {
 
   announceLiveRegion(keyLabel: string, context = 'pressed'): void {
     if (!this.options.useLiveRegion || !this.announcerEl) return;
-
-    console.log('[Announce] Fired:', {
-      keyLabel,
-      context,
-    });
 
     if (this.ariaLiveTimer) clearTimeout(this.ariaLiveTimer);
 
@@ -1450,6 +1446,7 @@ class SimpleKeyboard {
    */
   handleInternalKeyNav(event: KeyboardEvent): void {
     if (!(event instanceof KeyboardEvent)) return;
+    if (!this.keyboardDOM?.offsetParent) return;
 
     const { key } = event;
 
@@ -1457,7 +1454,7 @@ class SimpleKeyboard {
 
     event.preventDefault();
 
-    const focused = document.activeElement as HTMLElement;
+    const focused = this.keyboardDOM.querySelector('[aria-selected="true"]') as HTMLElement;
 
     // Find the currently focused button
     if (!focused || !focused.hasAttribute('data-skbtn')) return;
@@ -1481,9 +1478,8 @@ class SimpleKeyboard {
     }
 
     if (nextButton) {
-      focused.setAttribute('tabindex', '-1');
-      nextButton.setAttribute('tabindex', '0');
-      nextButton.focus();
+      focused.setAttribute('aria-selected', 'false');
+      nextButton.setAttribute('aria-selected', 'true');
     }
   }
 
@@ -1688,6 +1684,7 @@ class SimpleKeyboard {
     document.removeEventListener('mouseup', this.handleMouseUpBound);
     document.removeEventListener('touchend', this.handleTouchEndBound);
     document.removeEventListener('select', this.handleSelectBound);
+    document.removeEventListener('keydown', this.handleInternalKeyNavBound);
 
     // selectionchange is causing caret update issues on Chrome
     // https://github.com/hodgef/simple-keyboard/issues/2346
@@ -1877,9 +1874,6 @@ class SimpleKeyboard {
 
     //Initialize Announcer
     this.announcerEl = this.ensureAnnouncer(this.keyboardDOM);
-    const announcers = document.querySelectorAll('.hg-live-region');
-    console.debug('[a11y] on Init announcers:', announcers.length, announcers);
-    console.debug('[a11y] on Init announcerConnected:', !!(this.announcerEl && this.announcerEl.isConnected));
 
     /**
      * setEventListeners
@@ -1945,9 +1939,6 @@ class SimpleKeyboard {
     if (typeof this.options.onRender === 'function') this.options.onRender(this);
 
     this.announcerEl = this.ensureAnnouncer(this.keyboardDOM);
-    const announcers = document.querySelectorAll('.hg-live-region');
-    console.debug('[a11y] on Render announcers:', announcers.length, announcers);
-    console.debug('[a11y] on Render announcerConnected:', !!(this.announcerEl && this.announcerEl.isConnected));
   }
 
   /**
@@ -1955,35 +1946,25 @@ class SimpleKeyboard {
    * Called from onInit to ensure DOM is fully complete and painted
    */
   handleAutoFocus(): void {
-    // Double-buffer with setTimeout + requestAnimationFrame to ensure DOM is fully painted
     setTimeout(() => {
       requestAnimationFrame(() => {
-        const firstFocusableButton = this.keyboardDOM.querySelector('[data-skBtn][tabindex="0"]') as HTMLElement;
-        
-        if (firstFocusableButton) {
-          firstFocusableButton.focus();
-          
+        const firstActive = this.keyboardDOM.querySelector('[data-skBtn][aria-selected="true"]') as HTMLElement;
+
+        if (firstActive) {
           if (this.options.debug) {
-            console.log('AutoFocus: Focused first keyboard button');
+            console.log('AutoFocus: First keyboard button already active');
           }
         } else {
-          // Fallback: Find any button with tabindex="0" or the first button
-          const fallbackButton = 
-            this.keyboardDOM.querySelector('[data-skBtn][tabindex="0"]') as HTMLElement ||
-            this.keyboardDOM.querySelector('[data-skBtn]') as HTMLElement;
-            
+          // Fallback: just grab the first button
+          const fallbackButton = this.keyboardDOM.querySelector('[data-skBtn]') as HTMLElement;
+
           if (fallbackButton) {
-            // Make sure it's focusable
-            fallbackButton.setAttribute('tabindex', '0');
-            fallbackButton.focus();
-            
+            fallbackButton.setAttribute('aria-selected', 'true');
             if (this.options.debug) {
-              console.log('AutoFocus: Focused fallback keyboard button');
+              console.log('AutoFocus: Activated fallback keyboard button');
             }
-          } else {
-            if (this.options.debug) {
-              console.warn('AutoFocus: No keyboard buttons found for focus!');
-            }
+          } else if (this.options.debug) {
+            console.warn('AutoFocus: No keyboard buttons found to activate!');
           }
         }
       });
@@ -2211,8 +2192,7 @@ class SimpleKeyboard {
     // this.keyboardDOM.setAttribute('tabindex', '0');
 
     this.instructions =
-      this.options.instructions ||
-      'Arrow keys navigate. Enter to select. Tab to exit keyboard, Shift+Tab to return.';
+      this.options.instructions || 'Arrow keys navigate. Enter to select. Tab to exit keyboard, Shift+Tab to return.';
 
     // Add layout header for context
     this.keyboardHeader = document.createElement('h2');
@@ -2227,7 +2207,7 @@ class SimpleKeyboard {
     this.keyboardInstructions.setAttribute('role', 'note');
     this.keyboardInstructions.textContent = this.instructions;
     this.keyboardDOM.appendChild(this.keyboardInstructions);
-    
+
     // Update ARIA attributes to reference both header and instructions
     this.keyboardDOM.setAttribute('aria-labelledby', this.keyboardHeader.id);
     this.keyboardDOM.setAttribute('aria-describedby', this.keyboardInstructions.id);
@@ -2431,15 +2411,22 @@ class SimpleKeyboard {
           buttonDOM.setAttribute('role', 'button');
         }
 
-        buttonDOM.setAttribute('tabindex', '-1'); // Only one key should be tabbable at a time
+        buttonDOM.setAttribute('aria-selected', 'false'); // Only one key should be tabbable at a time
+        buttonDOM.setAttribute('tabindex', '-1'); // Managed manually for arrow key navigation
+
+        // Accessibility: Aria-label for screen readers
+        // If the buttonDisplayName is a symbol or icon, consider customizing the aria-label via options.display
         buttonDOM.setAttribute('aria-label', buttonDisplayName);
 
         // Optional: Title attribute for screen readers
         buttonDOM.setAttribute('title', buttonDisplayName);
 
+        // stable id for key
+        buttonDOM.id = `key-${rIndex}-${bIndex}-${button.replace(/\s+/g, '-')}`;
+
         // Example: If this is the first key, make it focusable
         if (rIndex === 0 && bIndex === 0) {
-          buttonDOM.setAttribute('tabindex', '0');
+          buttonDOM.setAttribute('aria-selected', 'true');
         }
 
         /**

@@ -22,7 +22,7 @@ class Demo {
       physicalKeyboardHighlight: true,
       physicalKeyboardHighlightPress: true,
       autoFocus: true,
-      debug: true,
+      debug: false,
     });
 
     /**
