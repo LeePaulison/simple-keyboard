@@ -51,11 +51,6 @@ class PhysicalKeyboard {
   handleHighlightKeyDown(e: KeyboardEvent) {
     const options = this.getOptions();
 
-    // if (options.physicalKeyboardHighlightPreventDefault && this.isModifierKey(e)) {
-    //   e.preventDefault();
-    //   e.stopImmediatePropagation();
-    // }
-
     if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !this.shiftActive) {
       this.shiftActive = !this.shiftActive;
     }
@@ -69,6 +64,12 @@ class PhysicalKeyboard {
     this.dispatch((instance: any) => {
       const standardButtonPressed = instance.getButtonElement(buttonPressed);
       const functionButtonPressed = instance.getButtonElement(`{${buttonPressed}}`);
+
+      console.log('[PhysicalKeyboard] handleHighlightKeyDown', {
+        buttonPressed,
+        standardButtonPressed,
+        functionButtonPressed,
+      });
 
       let buttonDOM;
       let buttonName: string;

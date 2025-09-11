@@ -858,6 +858,23 @@ class SimpleKeyboard {
    * @param  {string} inputName optional - the internal input to select
    */
   setInput(input: string, inputName: string = this.options.inputName || this.defaultName, skipSync?: boolean): void {
+    // Reserved channel for focus restoration
+    if (inputName === '_focusRestore') {
+      const prev = this.input['_focusRestore'];
+      this.input['_focusRestore'] = input;
+
+      const mode = this.options.restoreFocusOnChange || 'content';
+
+      if (mode === 'never') return;
+
+      if (mode === 'content' && prev === input) {
+        return; // No content change → skip focus restore
+      }
+
+      this.keyboardDOM?.focus();
+      return;
+    }
+
     this.input[inputName] = input;
 
     /**
@@ -1125,8 +1142,6 @@ class SimpleKeyboard {
    */
 
   removeEventListeners(): void {
-    console.log('Removing event listeners...');
-
     document.removeEventListener('keydown', this.handleKeyDownBound);
     document.removeEventListener('keyup', this.handleKeyUpBound);
     document.removeEventListener('mouseup', this.handleMouseUpBound);
@@ -1153,7 +1168,6 @@ class SimpleKeyboard {
 
       // LPJr: Prevent duplicate listeners
       if (this.listenersAdded) {
-        console.log('Event listeners already set. Skipping...');
         return;
       }
 
@@ -1205,7 +1219,6 @@ class SimpleKeyboard {
 
   handleGetButtonAndAnnounce(event: KeyboardHandlerEvent): void {
     if (!this.isSupportedEvent(event)) return;
-    console.log('I am handling get button and announce');
     this.getButtonAndAnnounce(event);
   }
 
@@ -1213,12 +1226,38 @@ class SimpleKeyboard {
    * Event Handler: KeyUp
    */
   handleKeyUp(event: KeyboardHandlerEvent): void {
-    if (this.options.physicalKeyboardHighlightPreventDefault) {
-      event.preventDefault();
+    // 1. CandidateBox owns key handling if open
+    if (CandidateBox.isOpen) {
+      return;
     }
 
+    // 2. Normalize key
+    const key = event.key;
+
+    // 3. Prevent default only for printable chars when configured
+    const bypassKeys = new Set([
+      'Tab',
+      'ArrowUp',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowRight',
+      'Enter',
+      'Escape',
+      ' ',
+      'Spacebar',
+    ]);
+
+    if (this.options.physicalKeyboardHighlightPreventDefault && event instanceof KeyboardEvent) {
+      const isPrintable = key.length === 1;
+      if (!bypassKeys.has(key) && isPrintable) {
+        event.preventDefault();
+      }
+    }
+
+    // 4. Caret handling
     this.caretEventHandler(event);
 
+    // 5. Release physical highlight
     if (this.options.physicalKeyboardHighlight) {
       this.physicalKeyboard.handleHighlightKeyUp(event);
     }
@@ -1228,45 +1267,55 @@ class SimpleKeyboard {
    * Event Handler: KeyDown
    */
   handleKeyDown(event: KeyboardHandlerEvent): void {
-    // eslint-disable-next-line no-debugger
-    // debugger;
-
-    const shouldSuppressKeyAnnounce = CandidateBox.isOpen;
-    if (shouldSuppressKeyAnnounce) {
-      return; // Let CandidateBox handle all announcements
+    // 1. CandidateBox takes over completely when open
+    if (CandidateBox.isOpen) {
+      return;
     }
 
-    const bypassKeys = new Set(['Tab', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Enter', ' ', 'Spacebar']);
+    // 2. Normalize key values (Spacebar → ' ')
+    const key = event.key;
 
-    if (
-      this.options.physicalKeyboardHighlightPreventDefault &&
-      event instanceof KeyboardEvent &&
-      !bypassKeys.has(event.key)
-    ) {
-      event.preventDefault();
+    // 3. Prevent browser defaults for printable keys if highlightPreventDefault is enabled
+    const bypassKeys = new Set([
+      'Tab',
+      'ArrowUp',
+      'ArrowDown',
+      'ArrowLeft',
+      'ArrowRight',
+      'Enter',
+      'Escape',
+      ' ',
+      'Spacebar',
+    ]);
+
+    if (this.options.physicalKeyboardHighlightPreventDefault && event instanceof KeyboardEvent) {
+      const isPrintable = key.length === 1; // single character like a, 1, !
+      if (!bypassKeys.has(key) && isPrintable) {
+        event.preventDefault();
+      }
     }
 
-    // Only use Enter key for virtual button activation to avoid conflicts with physical keyboard
-    if (event instanceof KeyboardEvent && event.key === 'Enter') {
+    // 4. Activation keys (Enter, Space)
+    if (event instanceof KeyboardEvent && key === 'Enter') {
       const active = this.keyboardDOM.querySelector('.hg-button[aria-selected="true"]') as HTMLElement;
-
       if (active?.hasAttribute('data-skbtn')) {
-        const buttonLabel =
-          active.getAttribute('data-skbtn') || active.getAttribute('aria-label') || active.textContent?.trim();
-
+        event.preventDefault(); // Prevent form submission (Enter) or scroll (Space)
+        const buttonLabel = active.getAttribute('data-skbtn');
         if (buttonLabel) {
-          event.preventDefault(); // Prevent form submission
           this.handleButtonClicked(buttonLabel, event);
         }
       }
     }
 
+    // 5. Log the event
     this.logEventType('Keyboard', event);
 
+    // 6. Sync physical highlight
     if (this.options.physicalKeyboardHighlight) {
       this.physicalKeyboard.handleHighlightKeyDown(event);
     }
 
+    // 7. Announce keys to assistive tech
     this.handleGetButtonAndAnnounce(event);
   }
 
@@ -1447,6 +1496,7 @@ class SimpleKeyboard {
   handleInternalKeyNav(event: KeyboardEvent): void {
     if (!(event instanceof KeyboardEvent)) return;
     if (!this.keyboardDOM?.offsetParent) return;
+    if (CandidateBox.isOpen) return;
 
     const { key } = event;
 
@@ -1480,6 +1530,7 @@ class SimpleKeyboard {
     if (nextButton) {
       focused.setAttribute('aria-selected', 'false');
       nextButton.setAttribute('aria-selected', 'true');
+      this.keyboardDOM.setAttribute('aria-activedescendant', nextButton.id);
     }
   }
 
@@ -2189,7 +2240,7 @@ class SimpleKeyboard {
 
     this.keyboardDOM.setAttribute('role', 'application');
     this.keyboardDOM.setAttribute('aria-label', this.options.ariaLabel || 'Virtual Keyboard');
-    // this.keyboardDOM.setAttribute('tabindex', '0');
+    this.keyboardDOM.setAttribute('tabindex', '-1');
 
     this.instructions =
       this.options.instructions || 'Arrow keys navigate. Enter to select. Tab to exit keyboard, Shift+Tab to return.';

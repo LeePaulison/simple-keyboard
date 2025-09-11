@@ -76,3 +76,42 @@ https://github.com/hodgef/simple-keyboard/wiki/Community-Libraries-&-Integration
 
 PRs and issues are always welcome. Feel free to submit any issues you have at:
 [https://github.com/hodgef/simple-keyboard/issues](https://github.com/hodgef/simple-keyboard/issues)
+
+## 🔎 Focus Management (`_focusRestore`) - added by Lee Paulison Jr (AAC)
+
+This keyboard manages its own focus to ensure predictable behavior and 508a/WCAG compliance.
+
+- **Problem**: By default, Draft.js (and similar editors) steal DOM focus after every text update. That breaks roving navigation and causes ping-pong between the editor and keyboard.
+- **Solution**: We use a reserved `inputName` (`"_focusRestore"`) with `setInput` to signal content changes. When triggered, the keyboard re-applies focus to its root container.
+
+### How it works
+
+- `VirtualInputController` subscribes to editor updates (`plainText`).
+- On actual content change (not cursor move), it calls:
+  ```js
+  keyboardRef.current.setInput(plainText, '_focusRestore');
+  ```
+- The keyboard detects the special `inputName` and tests the internal input array (this.input['_focusRestore']) against the incoming input for changes.
+- if changed and `restoreFocusOnChange = 'content'` is set, focus is restored by simply calling `this.keyboardDOM.focus()`.
+
+If restoreFocusOnChange: "content" → focus is restored only when text changes.
+
+If "always" → focus is restored on every update (text + cursor).
+
+If "never" → no automatic focus restoration.
+
+Focus is applied to the keyboard root (this.keyboardDOM.focus()), which must be programmatically focusable (tabIndex="-1").
+
+Why it matters
+Arrow keys are caught at the document level, so they always work — focus restoration is about screen reader correctness, not raw event survival.
+
+CandidateBox temporarily takes over arrow navigation; when it closes, the keyboard regains control.
+
+Tab/Shift+Tab remain available for global navigation (no traps).
+
+Requirement of use
+Apps using this keyboard must integrate with the \_focusRestore convention.
+
+The editor should accept that the keyboard manages its own focus after content changes.
+
+This behavior is AAC’s default; other apps can override with the restoreFocusOnChange option.

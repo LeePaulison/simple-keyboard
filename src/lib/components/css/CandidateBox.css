@@ -15,6 +15,11 @@ ul.hg-candidate-box-list {
   padding: 0;
   margin: 0;
   flex: 1;
+  border-radius: 0.25rem;
+}
+
+ul.hg-candidate-box-list[role='listbox'] {
+  outline: #3d4963 solid 2px;
 }
 
 li.hg-candidate-box-list-item {
@@ -23,6 +28,7 @@ li.hg-candidate-box-list-item {
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 0.25rem;
 }
 
 li.hg-candidate-box-list-item:hover {

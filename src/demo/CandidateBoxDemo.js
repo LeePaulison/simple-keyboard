@@ -13,6 +13,11 @@ class Demo {
     setDOM();
 
     /**
+     * Update simple-keyboard when input is changed directly
+     */
+    const inputEl = document.querySelector('.input');
+
+    /**
      * Demo Start
      */
     this.keyboard = new Keyboard({
@@ -27,16 +32,28 @@ class Demo {
       },
       physicalKeyboardHighlight: true,
       physicalKeyboardHighlightPress: true,
-      // physicalKeyboardHighlightPreventDefault: true,
+      physicalKeyboardHighlightPreventDefault: true,
       autoFocus: true,
+      restoreFocusOnChange: 'content',
     });
 
-    /**
-     * Update simple-keyboard when input is changed directly
-     */
-    document.querySelector('.input').addEventListener('input', (event) => {
-      this.keyboard.setInput(event.target.value);
+    // Prevent physical spacebar inserting spaces
+    inputEl.addEventListener('keydown', (e) => {
+      if (e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+      }
     });
+
+    // Keep input and keyboard in sync
+    inputEl.addEventListener('input', (e) => {
+      this.keyboard.setInput(e.target.value);
+    });
+  }
+
+  // You can log focus inside the constructor if needed
+  // console.log('Who has focus?', document.activeElement);
+  hasFocus() {
+    console.log('Who has focus?', document.activeElement);
   }
 
   onChange(input) {
@@ -46,15 +63,16 @@ class Demo {
      * Updating input's value
      */
     inputElement.value = input;
-    console.log('Input changed', input);
-
+    // Replace space characters with ␣ for debugging
+    const visible = input.replace(/ /g, '␣');
     /**
      * Synchronizing input caret position
      */
     const caretPosition = this.keyboard.caretPosition;
     if (caretPosition !== null) this.setInputCaretPosition(inputElement, caretPosition);
 
-    console.log('caretPosition', caretPosition);
+    this.keyboard.setInput(input, '_focusRestore');
+    this.hasFocus();
   }
 
   setInputCaretPosition(elem, pos) {

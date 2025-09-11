@@ -15,6 +15,10 @@
   border-radius: 5px;
 }
 
+.hg-theme-default:focus {
+  outline: 2px solid #3d4963;
+}
+
 .hg-theme-default .hg-button span,
 .hg-theme-default .hg-button span svg {
   pointer-events: none;
@@ -122,7 +126,7 @@
 }
 
 .hg-theme-default .hg-button[aria-selected='true'] {
-  background: rgba(5, 25, 70, 0.53);
+  background: #3d4963;
   color: white;
 }
 

@@ -12,15 +12,37 @@ class CandidateBox {
   private candidateOptions: HTMLLIElement[] = [];
   private globalLiveRegionElement: HTMLElement | null = document.querySelector('.hg-live-region');
   static isOpen = false;
+  private handleActiveIndexBound: (e: KeyboardEvent) => void;
+  private firstLastNavBound: (e: KeyboardEvent) => void;
+  private listenersAttached = false;
 
   constructor({ utilities, options }: CandidateBoxParams) {
     this.utilities = utilities;
     this.options = options;
     Utilities.bindMethods(CandidateBox, this);
     this.pageSize = this.utilities.getOptions().layoutCandidatesPageSize || 5;
+    this.handleActiveIndexBound = this.handleActiveIndex.bind(this);
+    this.firstLastNavBound = this.firstLastNav.bind(this);
+  }
+
+  private attachDocListeners() {
+    if (this.listenersAttached) return;
+    // IMPORTANT: add the bound functions directly, no wrapper
+    document.addEventListener('keydown', this.handleActiveIndexBound, { capture: false });
+    document.addEventListener('keydown', this.firstLastNavBound, { capture: false });
+    this.listenersAttached = true;
+  }
+
+  private detachDocListeners() {
+    if (!this.listenersAttached) return;
+    document.removeEventListener('keydown', this.handleActiveIndexBound, { capture: false });
+    document.removeEventListener('keydown', this.firstLastNavBound, { capture: false });
+    this.listenersAttached = false;
   }
 
   destroy(): void {
+    this.detachDocListeners();
+
     if (this.candidateBoxElement) {
       setTimeout(() => {
         if (this.candidateBoxElement) {
@@ -62,7 +84,27 @@ class CandidateBox {
     CandidateBox.isOpen = true;
   }
 
+  private firstLastNav(e: KeyboardEvent) {
+    if (e.key !== 'Tab' || !CandidateBox.isOpen) return;
+
+    const focusable = this.candidateBoxElement?.querySelectorAll<HTMLElement>('.hg-candidate-box-list-item');
+
+    if (!focusable?.length) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (e.shiftKey && document.querySelector<HTMLElement>('.hg-candidate-box-list-item.active') === first) {
+      e.preventDefault();
+      last.setAttribute('aria-selected', 'true');
+    } else if (!e.shiftKey && document.querySelector<HTMLElement>('.hg-candidate-box-list-item.active') === last) {
+      e.preventDefault();
+      first.setAttribute('aria-selected', 'true');
+    }
+  }
+
   renderPage({ candidateListPages, targetElement, pageIndex, nbPages, onItemSelected }: CandidateBoxRenderParams) {
+    this.attachDocListeners();
     this.candidateBoxElement?.remove();
 
     this.candidateBoxElement = document.createElement('div');
@@ -70,27 +112,6 @@ class CandidateBox {
     this.candidateBoxElement.setAttribute('role', 'dialog');
     this.candidateBoxElement.setAttribute('aria-label', 'Character Suggestions');
     this.candidateBoxElement.setAttribute('aria-describedby', 'candidate-box-instructions');
-
-    this.candidateBoxElement.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return;
-
-      const focusable = this.candidateBoxElement?.querySelectorAll<HTMLElement>(
-        '[tabindex]:not([tabindex="-1"]), button, [href], input, select, textarea'
-      );
-
-      if (!focusable?.length) return;
-
-      const first = focusable[0];
-      const last = focusable[focusable.length - 1];
-
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    });
 
     const instructionsElement = document.createElement('div');
     instructionsElement.id = 'candidate-box-instructions';
@@ -101,14 +122,13 @@ class CandidateBox {
     const candidateListULElement = document.createElement('ul');
     candidateListULElement.className = 'hg-candidate-box-list';
     candidateListULElement.setAttribute('role', 'listbox');
-    candidateListULElement.setAttribute('tabindex', '0');
+    candidateListULElement.setAttribute('tabindex', '-1');
 
     candidateListPages[pageIndex].forEach((candidateListItem, i) => {
       const candidateListLIElement = document.createElement('li');
       candidateListLIElement.setAttribute('role', 'option');
-      candidateListLIElement.setAttribute('tabindex', '-1');
       candidateListLIElement.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
-      candidateListLIElement.id = `candidate-${i}`;
+      candidateListLIElement.id = `key-candidate-${i}`;
       candidateListLIElement.className = 'hg-candidate-box-list-item';
       candidateListLIElement.innerHTML = this.options.display?.[candidateListItem] || candidateListItem;
 
@@ -172,8 +192,26 @@ class CandidateBox {
 
     targetElement.prepend(this.candidateBoxElement);
 
-    candidateListULElement.focus();
     this.setupKeyboardNav(candidateListULElement);
+  }
+
+  private handleActiveIndex(e: KeyboardEvent): void {
+    if (!CandidateBox.isOpen) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      this.updateActiveIndex((this.activeIndex + 1) % this.candidateOptions.length);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      this.updateActiveIndex((this.activeIndex - 1 + this.candidateOptions.length) % this.candidateOptions.length);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      this.activateSelectedOption();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      this.destroy();
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      e.preventDefault();
+    }
   }
 
   private setupKeyboardNav(listbox: HTMLUListElement) {
@@ -183,19 +221,6 @@ class CandidateBox {
     });
 
     this.setActiveOption(0);
-
-    listbox.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        this.updateActiveIndex((this.activeIndex + 1) % this.candidateOptions.length);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        this.updateActiveIndex((this.activeIndex - 1 + this.candidateOptions.length) % this.candidateOptions.length);
-      } else if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        this.activateSelectedOption();
-      }
-    });
   }
 
   private setActiveOption(index: number): void {
@@ -238,14 +263,15 @@ class CandidateBox {
     const activeOption = this.candidateOptions[this.activeIndex];
     if (!activeOption) return;
 
-    // ✅ Update live region before triggering the click
+    // Update live region before triggering the click
     if (this.globalLiveRegionElement) {
       const label = activeOption.textContent?.trim();
       this.globalLiveRegionElement.textContent = `Inserted: ${label}`;
     }
 
-    // ✅ Then trigger selection
+    // Then trigger selection
     activeOption.click();
+    activeOption.setAttribute('aria-selected', 'false');
   }
 }
 
