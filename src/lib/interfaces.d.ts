@@ -578,6 +578,66 @@ export interface KeyboardOptions {
    * Module options can have any format
    */
   [name: string]: any;
+
+  /**
+   * ARIA properties for the virtual keyboard. - LPJr
+   * These properties help improve accessibility for screen readers.
+   */
+
+  /**
+   * Enable ARIA live region announcements for screen readers.
+   */
+  useLiveRegion?: boolean;
+
+  /**
+   * Defines the type of ARIA live region.
+   * Can be 'polite' (default) or 'assertive'.
+   */
+  liveRegionMode?: 'polite' | 'assertive';
+
+  /**
+   * Delay before announcing keypress in live region (ms).
+   */
+  liveRegionDelay?: number;
+
+  /**
+   * Label for the virtual keyboard container (for screen readers).
+   */
+  ariaLabel?: string;
+  /**
+   * Instructions for using the virtual keyboard.
+   */
+  instructions?: string;
+
+  /**
+   * Automatically focus the first key when the keyboard is rendered.
+   */
+  autoFocus?: boolean;
+
+  /**
+   * Control what the keyboard announces via live regions.
+   * - 'actions': Announce button presses ("Key q pressed") - good when editor handles content announcements
+   * - 'content': Announce resulting characters ("q") - good when editor is silent
+   * - 'both': Announce both actions and content - may cause duplicates with some editors
+   * - 'none': No live region announcements from keyboard
+   */
+  liveRegionAnnounceMode?: 'actions' | 'content' | 'both' | 'none';
+
+  /**
+   * When true, suppresses live region announcements when focus is on a text input.
+   * This prevents conflicts when the input field handles its own announcements.
+   */
+  suppressAnnouncementsOnInputFocus?: boolean;
+
+  /**
+   * Controls when the keyboard should auto-restore focus to itself
+   * after editor content changes (via setInput with "_focusRestore").
+   *
+   * - "content": Only when the incoming text differs from the last value (AAC default)
+   * - "always": Always restore focus on update
+   * - "never": Never auto-restore focus
+   */
+  restoreFocusOnChange?: 'content' | 'always' | 'never';
 }
 /**
  * Layout Key Mapping Interface
