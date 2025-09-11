@@ -298,4 +298,13 @@ export interface KeyboardOptions {
      * This prevents conflicts when the input field handles its own announcements.
      */
     suppressAnnouncementsOnInputFocus?: boolean;
+    /**
+     * Controls when the keyboard should auto-restore focus to itself
+     * after editor content changes (via setInput with "_focusRestore").
+     *
+     * - "content": Only when the incoming text differs from the last value (AAC default)
+     * - "always": Always restore focus on update
+     * - "never": Never auto-restore focus
+     */
+    restoreFocusOnChange?: 'content' | 'always' | 'never';
 }

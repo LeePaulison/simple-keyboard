@@ -11,10 +11,17 @@ declare class CandidateBox {
     private candidateOptions;
     private globalLiveRegionElement;
     static isOpen: boolean;
+    private handleActiveIndexBound;
+    private firstLastNavBound;
+    private listenersAttached;
     constructor({ utilities, options }: CandidateBoxParams);
+    private attachDocListeners;
+    private detachDocListeners;
     destroy(): void;
     show({ candidateValue, targetElement, onSelect }: CandidateBoxShowParams): void;
+    private firstLastNav;
     renderPage({ candidateListPages, targetElement, pageIndex, nbPages, onItemSelected }: CandidateBoxRenderParams): void;
+    private handleActiveIndex;
     private setupKeyboardNav;
     private setActiveOption;
     private updateActiveIndex;
