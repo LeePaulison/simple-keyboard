@@ -1297,7 +1297,7 @@ class SimpleKeyboard {
     }
 
     // 4. Activation keys (Enter, Space)
-    if (event instanceof KeyboardEvent && key === 'Enter' && !this.navEngaged) {
+    if (event instanceof KeyboardEvent && key === 'Enter' && this.navEngaged) {
       const active = this.keyboardDOM.querySelector('.hg-button[aria-selected="true"]') as HTMLElement;
       if (active?.hasAttribute('data-skbtn')) {
         event.preventDefault(); // Prevent form submission (Enter) or scroll (Space)
@@ -1540,6 +1540,8 @@ class SimpleKeyboard {
       nextButton.setAttribute('aria-selected', 'true');
       this.keyboardDOM.setAttribute('aria-activedescendant', nextButton.id);
     }
+
+    this.navEngaged = true;
   }
 
   /**
@@ -1823,6 +1825,11 @@ class SimpleKeyboard {
      * Reset initialized flag
      */
     this.initialized = false;
+
+    /**
+     * Reset navEngaged flag
+     */
+    this.navEngaged = false;
   }
 
   /**
