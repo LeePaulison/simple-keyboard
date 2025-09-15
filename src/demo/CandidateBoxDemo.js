@@ -50,8 +50,6 @@ class Demo {
     });
   }
 
-  // You can log focus inside the constructor if needed
-  // console.log('Who has focus?', document.activeElement);
   hasFocus() {
     console.log('Who has focus?', document.activeElement);
   }

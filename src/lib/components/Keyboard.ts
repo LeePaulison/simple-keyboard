@@ -70,6 +70,7 @@ class SimpleKeyboard {
     Spacebar: 'Space',
   };
   private announcerEl: HTMLDivElement | null = null;
+  navEngaged = false;
 
   /**
    * Creates an instance of SimpleKeyboard
@@ -1296,7 +1297,7 @@ class SimpleKeyboard {
     }
 
     // 4. Activation keys (Enter, Space)
-    if (event instanceof KeyboardEvent && key === 'Enter') {
+    if (event instanceof KeyboardEvent && key === 'Enter' && this.navEngaged) {
       const active = this.keyboardDOM.querySelector('.hg-button[aria-selected="true"]') as HTMLElement;
       if (active?.hasAttribute('data-skbtn')) {
         event.preventDefault(); // Prevent form submission (Enter) or scroll (Space)
@@ -1497,6 +1498,9 @@ class SimpleKeyboard {
     if (!(event instanceof KeyboardEvent)) return;
     if (!this.keyboardDOM?.offsetParent) return;
     if (CandidateBox.isOpen) return;
+
+    // Gate arrow key handling to when keyboard is not active surface
+    if (this.options.activeSurface !== 'keyboard') return;
 
     const { key } = event;
 

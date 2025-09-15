@@ -61,6 +61,7 @@ declare class SimpleKeyboard {
     NAMED_KEYS_TO_ANNOUNCE: Set<string>;
     NAMED_READABLE: Record<string, string>;
     private announcerEl;
+    navEngaged: boolean;
     /**
      * Creates an instance of SimpleKeyboard
      * @param {Array} selectorOrOptions If first parameter is a string, it is considered the container class. The second parameter is then considered the options object. If first parameter is an object, it is considered the options object.

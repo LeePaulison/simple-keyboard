@@ -374,4 +374,12 @@ export interface KeyboardOptions {
    * - "never": Never auto-restore focus
    */
   restoreFocusOnChange?: 'content' | 'always' | 'never';
+
+  /**
+   * Controls which surface is considered active for arrow key navigation purposes.
+   * - 'editor': The text input/editor is active (default)
+   * - 'keyboard': The virtual keyboard is active
+   * - 'none': Neither is active (disables auto focus restoration)
+   */
+  activeSurface?: 'editor' | 'keyboard' | 'none';
 }
