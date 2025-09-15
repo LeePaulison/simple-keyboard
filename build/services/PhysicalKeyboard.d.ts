@@ -16,6 +16,7 @@ declare class PhysicalKeyboard {
     lastLayout: string;
     shiftActive: boolean;
     capslockActive: boolean;
+    activeKeys: Set<HTMLElement>;
     /**
      * Creates an instance of the PhysicalKeyboard service
      */

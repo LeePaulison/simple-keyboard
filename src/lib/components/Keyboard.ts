@@ -1213,7 +1213,7 @@ class SimpleKeyboard {
     return (
       event instanceof KeyboardEvent ||
       event instanceof MouseEvent ||
-      event instanceof TouchEvent ||
+      (typeof TouchEvent !== 'undefined' && event instanceof TouchEvent) ||
       event instanceof PointerEvent
     );
   }
@@ -1297,7 +1297,7 @@ class SimpleKeyboard {
     }
 
     // 4. Activation keys (Enter, Space)
-    if (event instanceof KeyboardEvent && key === 'Enter' && this.navEngaged) {
+    if (event instanceof KeyboardEvent && key === 'Enter' && !this.navEngaged) {
       const active = this.keyboardDOM.querySelector('.hg-button[aria-selected="true"]') as HTMLElement;
       if (active?.hasAttribute('data-skbtn')) {
         event.preventDefault(); // Prevent form submission (Enter) or scroll (Space)
@@ -1432,7 +1432,11 @@ class SimpleKeyboard {
     }
 
     // 2. Pointer/touch path
-    if (event instanceof MouseEvent || event instanceof PointerEvent || event instanceof TouchEvent) {
+    if (
+      event instanceof MouseEvent ||
+      event instanceof PointerEvent ||
+      (typeof TouchEvent !== 'undefined' && event instanceof TouchEvent)
+    ) {
       const target = (event.target as HTMLElement)?.closest?.('[data-skbtn]');
       if (!target || !this.keyboardDOM.contains(target)) return;
 

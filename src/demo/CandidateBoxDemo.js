@@ -35,6 +35,7 @@ class Demo {
       physicalKeyboardHighlightPreventDefault: true,
       autoFocus: true,
       restoreFocusOnChange: 'content',
+      activeSurface: 'keyboard',
     });
 
     // Prevent physical spacebar inserting spaces

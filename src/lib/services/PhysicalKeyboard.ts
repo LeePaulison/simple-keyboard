@@ -20,6 +20,7 @@ class PhysicalKeyboard {
   lastLayout = '';
   shiftActive = false;
   capslockActive = false;
+  activeKeys: Set<HTMLElement> = new Set();
 
   /**
    * Creates an instance of the PhysicalKeyboard service
@@ -65,12 +66,6 @@ class PhysicalKeyboard {
       const standardButtonPressed = instance.getButtonElement(buttonPressed);
       const functionButtonPressed = instance.getButtonElement(`{${buttonPressed}}`);
 
-      console.log('[PhysicalKeyboard] handleHighlightKeyDown', {
-        buttonPressed,
-        standardButtonPressed,
-        functionButtonPressed,
-      });
-
       let buttonDOM;
       let buttonName: string;
 
@@ -87,6 +82,7 @@ class PhysicalKeyboard {
       const applyButtonStyle = (buttonElement: HTMLElement) => {
         buttonElement.style.background = options.physicalKeyboardHighlightBgColor || '#dadce4';
         buttonElement.style.color = options.physicalKeyboardHighlightTextColor || 'black';
+        this.activeKeys.add(buttonElement);
       };
 
       if (buttonDOM) {
@@ -141,6 +137,7 @@ class PhysicalKeyboard {
         if (buttonElement.removeAttribute) {
           buttonElement.removeAttribute('style');
         }
+        this.activeKeys.delete(buttonElement);
       };
 
       if (buttonDOM) {
@@ -159,6 +156,17 @@ class PhysicalKeyboard {
           }
         }
       }
+    });
+
+    requestAnimationFrame(() => {
+      if (this.activeKeys.size === 0) return;
+
+      this.activeKeys.forEach((buttonElement) => {
+        if (buttonElement.removeAttribute) {
+          buttonElement.removeAttribute('style');
+        }
+      });
+      this.activeKeys.clear();
     });
   }
 
