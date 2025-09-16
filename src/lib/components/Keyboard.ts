@@ -54,8 +54,7 @@ class SimpleKeyboard {
   liveRegionMode: 'assertive' | 'polite' = 'polite';
   liveRegionDelay = 0;
   ariaLabel = '';
-  handleKeyDownBound!: (event: KeyboardEvent) => void;
-  handleInternalKeyNavBound!: (event: KeyboardEvent) => void;
+  handleUnifiedKeyDownBound!: (event: KeyboardEvent) => void;
   handleKeyUpBound!: (event: KeyboardEvent) => void;
   handleMouseDownBound!: (event: MouseEvent) => void;
   handleMouseUpBound!: (event: MouseEvent) => void;
@@ -1145,7 +1144,7 @@ class SimpleKeyboard {
    */
 
   removeEventListeners(): void {
-    document.removeEventListener('keydown', this.handleKeyDownBound);
+    document.removeEventListener('keydown', this.handleUnifiedKeyDownBound);
     document.removeEventListener('keyup', this.handleKeyUpBound);
     document.removeEventListener('mouseup', this.handleMouseUpBound);
     document.removeEventListener('touchend', this.handleTouchEndBound);
@@ -1178,17 +1177,15 @@ class SimpleKeyboard {
       this.removeEventListeners();
 
       // LPJr: added named event handlers instead of anonymous functions
-      this.handleKeyDownBound = this.handleKeyDown.bind(this);
-      this.handleInternalKeyNavBound = this.handleInternalKeyNav.bind(this);
-      document.addEventListener('keydown', this.handleInternalKeyNavBound as EventListener);
 
+      this.handleUnifiedKeyDownBound = this.handleUnifiedKeyDown.bind(this);
       this.handleKeyUpBound = this.handleKeyUp.bind(this);
       this.handleMouseUpBound = this.handleMouseUp.bind(this);
       this.handleTouchEndBound = () => this.handleTouchEnd(this);
       this.handleSelectBound = () => this.handleSelect(this);
       this.handleSelectionChangeBound = this.handleSelectionChange.bind(this);
 
-      document.addEventListener('keydown', this.handleKeyDownBound);
+      document.addEventListener('keydown', this.handleUnifiedKeyDownBound as EventListener);
       document.addEventListener('keyup', this.handleKeyUpBound);
       document.addEventListener('mouseup', this.handleMouseUpBound);
       document.addEventListener('touchend', this.handleTouchEndBound);
@@ -1202,6 +1199,17 @@ class SimpleKeyboard {
       // Mark listeners as added to prevent duplicates
       this.listenersAdded = true;
     }
+  }
+
+  /**
+   * Unified KeyDown Handler for Keyboard and Internal Navigation
+   */
+  handleUnifiedKeyDown(event: KeyboardHandlerEvent): void {
+    // Always handle navigation keys for roving
+    this.handleInternalKeyNav(event);
+
+    // Then standard key handling
+    this.handleKeyDown(event);
   }
 
   /**
@@ -1786,23 +1794,22 @@ class SimpleKeyboard {
   destroy(): void {
     if (this.options.debug) console.log(`Destroying simple-keyboard instance: ${this.currentInstanceName}`);
 
-    const { physicalKeyboardHighlightPreventDefault = false } = this.options;
+    // const { physicalKeyboardHighlightPreventDefault = false } = this.options;
 
     /**
      * Remove document listeners
      */
-    document.removeEventListener('keyup', this.handleKeyUpBound);
-    document.removeEventListener('keydown', this.handleKeyDownBound);
-    document.removeEventListener('mouseup', this.handleMouseUpBound);
-    document.removeEventListener('touchend', this.handleTouchEndBound);
-    document.removeEventListener('select', this.handleSelectBound);
-    document.removeEventListener('keydown', this.handleInternalKeyNavBound);
+    // document.removeEventListener('keyup', this.handleKeyUpBound);
+    // document.removeEventListener('mouseup', this.handleMouseUpBound);
+    // document.removeEventListener('touchend', this.handleTouchEndBound);
+    // document.removeEventListener('select', this.handleSelectBound);
+    this.removeEventListeners();
 
-    // selectionchange is causing caret update issues on Chrome
-    // https://github.com/hodgef/simple-keyboard/issues/2346
-    if (this.options.updateCaretOnSelectionChange) {
-      document.removeEventListener('selectionchange', this.handleSelectionChangeBound);
-    }
+    // // selectionchange is causing caret update issues on Chrome
+    // // https://github.com/hodgef/simple-keyboard/issues/2346
+    // if (this.options.updateCaretOnSelectionChange) {
+    //   document.removeEventListener('selectionchange', this.handleSelectionChangeBound);
+    // }
 
     document.onpointerup = null;
     document.ontouchend = null;
