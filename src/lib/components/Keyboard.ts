@@ -1265,6 +1265,29 @@ class SimpleKeyboard {
   }
 
   /**
+   * Resolve the actual key to announce/handle based on roving state
+   */
+  private resolveKey(key: string, navEngaged: boolean): string | null {
+    const active = this.keyboardDOM.querySelector('.hg-button[aria-selected="true"]') as HTMLElement | null;
+    const rovedKey = active?.getAttribute('data-skbtn');
+
+    // If no roved element, fall back
+    if (!rovedKey) return key;
+
+    // No roving yet → Enter/Space act literally
+    if (!navEngaged && (key === 'Enter' || key === ' ' || key === 'Spacebar')) {
+      return key === 'Enter' ? '{enter}' : '{space}';
+    }
+
+    // Roving engaged → Enter/Space resolve to selected key
+    if (key === 'Enter' || key === ' ' || key === 'Spacebar') {
+      return rovedKey;
+    }
+
+    return key;
+  }
+
+  /**
    * Event Handler: KeyDown
    */
   handleKeyDown(event: KeyboardHandlerEvent): void {
@@ -1274,7 +1297,7 @@ class SimpleKeyboard {
     }
 
     // 2. Normalize key values (Spacebar → ' ')
-    const key = event.key;
+    const key = event.key === 'Spacebar' ? ' ' : event.key;
 
     // 3. Prevent browser defaults for printable keys if highlightPreventDefault is enabled
     const bypassKeys = new Set([
@@ -1297,17 +1320,19 @@ class SimpleKeyboard {
     }
 
     // 4. Activation keys (Enter, Space)
-    if (event instanceof KeyboardEvent && key === 'Enter' && this.navEngaged) {
-      const active = this.keyboardDOM.querySelector('.hg-button[aria-selected="true"]') as HTMLElement;
-      if (active?.hasAttribute('data-skbtn')) {
-        event.preventDefault(); // Prevent form submission (Enter) or scroll (Space)
-        const buttonLabel = active.getAttribute('data-skbtn');
-        if (buttonLabel) {
-          this.handleButtonClicked(buttonLabel, event);
-        }
-      }
-    }
+    if (event instanceof KeyboardEvent && (key === 'Enter' || key === ' ' || key === 'Spacebar')) {
+      event.preventDefault(); // prevent form submit or scroll
+      event.stopPropagation();
+      event.stopImmediatePropagation();
 
+      const resolved = this.resolveKey(key, this.navEngaged);
+      console.log('Resolved key:', resolved);
+      if (resolved) {
+        this.handleButtonClicked(resolved, event);
+      }
+
+      return; // Skip further processing for activation keys
+    }
     // 5. Log the event
     this.logEventType('Keyboard', event);
 
@@ -2261,22 +2286,28 @@ class SimpleKeyboard {
       this.options.instructions || 'Arrow keys navigate. Enter to select. Tab to exit keyboard, Shift+Tab to return.';
 
     // Add layout header for context
-    this.keyboardHeader = document.createElement('h2');
-    this.keyboardHeader.classList.add('hg-header', 'sr-only');
-    this.keyboardHeader.id = 'hg-virtual-keyboard-header';
-    this.keyboardHeader.textContent = 'QWERTY Virtual Keyboard';
-    this.keyboardDOM.appendChild(this.keyboardHeader);
+    const header = this.keyboardDOM.querySelector('#hg-virtual-keyboard-header');
+    if (!header) {
+      this.keyboardHeader = document.createElement('h2');
+      this.keyboardHeader.classList.add('hg-header', 'sr-only');
+      this.keyboardHeader.id = 'hg-virtual-keyboard-header';
+      this.keyboardHeader.textContent = 'QWERTY Virtual Keyboard';
+      this.keyboardDOM.appendChild(this.keyboardHeader);
+      // Update ARIA attributes to reference both header and instructions
+      this.keyboardDOM.setAttribute('aria-labelledby', this.keyboardHeader.id);
+    }
 
-    this.keyboardInstructions = document.createElement('p');
-    this.keyboardInstructions.classList.add('hg-instructions', 'sr-only');
-    this.keyboardInstructions.id = 'hg-virtual-keyboard-instructions';
-    this.keyboardInstructions.setAttribute('role', 'note');
-    this.keyboardInstructions.textContent = this.instructions;
-    this.keyboardDOM.appendChild(this.keyboardInstructions);
-
-    // Update ARIA attributes to reference both header and instructions
-    this.keyboardDOM.setAttribute('aria-labelledby', this.keyboardHeader.id);
-    this.keyboardDOM.setAttribute('aria-describedby', this.keyboardInstructions.id);
+    const instructions = this.keyboardDOM.querySelector('#hg-virtual-keyboard-instructions');
+    if (!instructions) {
+      this.keyboardInstructions = document.createElement('p');
+      this.keyboardInstructions.classList.add('hg-instructions', 'sr-only');
+      this.keyboardInstructions.id = 'hg-virtual-keyboard-instructions';
+      this.keyboardInstructions.setAttribute('role', 'note');
+      this.keyboardInstructions.textContent = this.instructions;
+      this.keyboardDOM.appendChild(this.keyboardInstructions);
+      // Update ARIA attributes to reference both header and instructions
+      this.keyboardDOM.setAttribute('aria-describedby', this.keyboardInstructions.id);
+    }
 
     /**
      * Create row wrapper
