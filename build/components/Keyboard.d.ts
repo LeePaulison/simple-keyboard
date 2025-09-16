@@ -231,6 +231,10 @@ declare class SimpleKeyboard {
      */
     handleKeyUp(event: KeyboardHandlerEvent): void;
     /**
+     * Resolve the actual key to announce/handle based on roving state
+     */
+    private resolveKey;
+    /**
      * Event Handler: KeyDown
      */
     handleKeyDown(event: KeyboardHandlerEvent): void;

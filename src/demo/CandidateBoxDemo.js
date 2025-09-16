@@ -12,6 +12,17 @@ class Demo {
   constructor() {
     setDOM();
 
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F9') {
+        this.keyboard.setOptions({ activeSurface: 'keyboard' });
+        console.log('[Demo] activeSurface set to keyboard');
+      }
+      if (e.key === 'F10') {
+        this.keyboard.setOptions({ activeSurface: 'editor' });
+        console.log('[Demo] activeSurface set to editor');
+      }
+    });
+
     /**
      * Update simple-keyboard when input is changed directly
      */
@@ -35,7 +46,8 @@ class Demo {
       physicalKeyboardHighlightPreventDefault: true,
       autoFocus: true,
       restoreFocusOnChange: 'content',
-      activeSurface: 'keyboard',
+      activeSurface: 'editor',
+      debug: true,
     });
 
     // Prevent physical spacebar inserting spaces

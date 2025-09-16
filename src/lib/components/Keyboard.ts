@@ -864,12 +864,14 @@ class SimpleKeyboard {
       const prev = this.input['_focusRestore'];
       this.input['_focusRestore'] = input;
 
-      const mode = this.options.restoreFocusOnChange || 'content';
+      const currentOptions = this.getOptions();
+
+      const mode = currentOptions.restoreFocusOnChange || 'content';
 
       if (mode === 'never') return;
 
       if (mode === 'content' && prev === input) {
-        return; // No content change → skip focus restore
+        return; // No content change
       }
 
       this.keyboardDOM?.focus();
@@ -1206,6 +1208,9 @@ class SimpleKeyboard {
    * Event Debug Logger
    */
   logEventType(tag: string, event: Event) {
+    const currentOptions = this.getOptions();
+
+    if (!currentOptions.debug) return;
     console.log(`[${tag}] Event type:`, event.type, '→', event.constructor.name);
   }
 
@@ -1319,14 +1324,13 @@ class SimpleKeyboard {
       }
     }
 
-    // 4. Activation keys (Enter, Space)
+    // 4. Activation keys (Enter, Space) -> Always handled by the VK
     if (event instanceof KeyboardEvent && (key === 'Enter' || key === ' ' || key === 'Spacebar')) {
       event.preventDefault(); // prevent form submit or scroll
       event.stopPropagation();
       event.stopImmediatePropagation();
 
       const resolved = this.resolveKey(key, this.navEngaged);
-      console.log('Resolved key:', resolved);
       if (resolved) {
         this.handleButtonClicked(resolved, event);
       }
@@ -1519,7 +1523,6 @@ class SimpleKeyboard {
       }
     }, 100);
   }
-
   /**
    * Event Handler: Internal Key Navigation
    */
@@ -1528,12 +1531,35 @@ class SimpleKeyboard {
     if (!this.keyboardDOM?.offsetParent) return;
     if (CandidateBox.isOpen) return;
 
+    const currentOptions = this.getOptions();
+
+    if (currentOptions.debug) {
+      console.log('Current Options:', currentOptions);
+    }
+
+    if (currentOptions.debug) {
+      console.log(
+        '[handleInternalKeyNav] Internal Key Nav:',
+        event.key,
+        'Active Surface:',
+        currentOptions.activeSurface
+      );
+    }
+
     // Gate arrow key handling to when keyboard is not active surface
-    if (this.options.activeSurface !== 'keyboard') return;
+    if (currentOptions.activeSurface !== 'keyboard') return;
+
+    if (currentOptions.debug) {
+      console.log('[handleInternalKeyNav] Handling Internal Key Nav:', event.key);
+    }
 
     const { key } = event;
 
     if (!['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp'].includes(key)) return;
+
+    if (currentOptions.debug) {
+      console.log('[handleInternalKeyNav] Arrow key pressed:', key);
+    }
 
     event.preventDefault();
 
