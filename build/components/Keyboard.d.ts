@@ -61,6 +61,7 @@ declare class SimpleKeyboard {
     NAMED_READABLE: Record<string, string>;
     private announcerEl;
     navEngaged: boolean;
+    lastUsedKey: string | null;
     /**
      * Creates an instance of SimpleKeyboard
      * @param {Array} selectorOrOptions If first parameter is a string, it is considered the container class. The second parameter is then considered the options object. If first parameter is an object, it is considered the options object.
@@ -167,7 +168,7 @@ declare class SimpleKeyboard {
      * Set new option or modify existing ones after initialization.
      * @param  {object} options The options to set
      */
-    setOptions(options?: {}): void;
+    setOptions(options?: Partial<KeyboardOptions>): void;
     /**
      * Detecting changes to non-function options
      * This allows us to ascertain whether a button re-render is needed

@@ -70,6 +70,7 @@ class SimpleKeyboard {
   };
   private announcerEl: HTMLDivElement | null = null;
   navEngaged = false;
+  lastUsedKey: string | null = null;
 
   /**
    * Creates an instance of SimpleKeyboard
@@ -580,7 +581,7 @@ class SimpleKeyboard {
 
       this.setInput(newInputValue, this.options.inputName, true);
 
-      if (debug) console.log('Input changed:', this.getAllInputs());
+      if (this.options.debug) console.log('Input changed:', this.getAllInputs());
 
       if (this.options.debug) {
         console.log(
@@ -638,7 +639,7 @@ class SimpleKeyboard {
       }
     }
 
-    if (debug) {
+    if (this.options.debug) {
       console.log('Key pressed:', button);
     }
   }
@@ -898,7 +899,7 @@ class SimpleKeyboard {
    * Set new option or modify existing ones after initialization.
    * @param  {object} options The options to set
    */
-  setOptions(options = {}): void {
+  setOptions(options: Partial<KeyboardOptions> = {}): void {
     const changedOptions = this.changedOptions(options);
     this.options = Object.assign(this.options, options);
 
@@ -916,6 +917,36 @@ class SimpleKeyboard {
        * Rendering
        */
       this.render();
+
+      /**
+       * Resume last roved key when switching back to VK
+       */
+      if (options.activeSurface === 'keyboard') {
+        let target: HTMLElement | null = null;
+
+        if (this.lastUsedKey) {
+          target = this.keyboardDOM?.querySelector(`[data-skbtn="${this.lastUsedKey}"]`) as HTMLElement;
+        }
+
+        if (!target) {
+          const buttons = this.keyboardDOM?.querySelectorAll('.hg-button') || [];
+          target = buttons.length ? (buttons[0] as HTMLElement) : null;
+        }
+
+        if (target) {
+          // clear any existing aria-selected
+          this.keyboardDOM
+            ?.querySelectorAll("[aria-selected='true']")
+            .forEach((btn) => btn.setAttribute('aria-selected', 'false'));
+
+          target.setAttribute('aria-selected', 'true');
+          this.keyboardDOM?.setAttribute('aria-activedescendant', target.id);
+
+          this.handleGetButtonAndAnnounce({
+            key: this.lastUsedKey || target.dataset.skbtn,
+          });
+        }
+      }
     }
   }
 
@@ -1606,6 +1637,7 @@ class SimpleKeyboard {
 
     if (nextButton) {
       focused.setAttribute('aria-selected', 'false');
+      this.lastUsedKey = nextButton.getAttribute('data-skbtn') || null;
       nextButton.setAttribute('aria-selected', 'true');
       this.keyboardDOM.setAttribute('aria-activedescendant', nextButton.id);
     }
