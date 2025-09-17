@@ -48,8 +48,7 @@ declare class SimpleKeyboard {
     liveRegionMode: 'assertive' | 'polite';
     liveRegionDelay: number;
     ariaLabel: string;
-    handleKeyDownBound: (event: KeyboardEvent) => void;
-    handleInternalKeyNavBound: (event: KeyboardEvent) => void;
+    handleUnifiedKeyDownBound: (event: KeyboardEvent) => void;
     handleKeyUpBound: (event: KeyboardEvent) => void;
     handleMouseDownBound: (event: MouseEvent) => void;
     handleMouseUpBound: (event: MouseEvent) => void;
@@ -220,6 +219,10 @@ declare class SimpleKeyboard {
      * Handles simple-keyboard event listeners
      */
     setEventListeners(): void;
+    /**
+     * Unified KeyDown Handler for Keyboard and Internal Navigation
+     */
+    handleUnifiedKeyDown(event: KeyboardHandlerEvent): void;
     /**
      * Event Debug Logger
      */

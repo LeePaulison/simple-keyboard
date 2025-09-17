@@ -173,6 +173,7 @@ class SimpleKeyboard {
       preventMouseDownDefault: false,
       enableLayoutCandidates: true,
       excludeFromLayout: {},
+      activeSurface: 'none',
       ...options,
     };
 
@@ -1309,6 +1310,9 @@ class SimpleKeyboard {
       return;
     }
 
+    // Get current options (for dynamic option changes)
+    const currentOptions = this.getOptions();
+
     // 2. Normalize key values (Spacebar → ' ')
     const key = event.key === 'Spacebar' ? ' ' : event.key;
 
@@ -1334,17 +1338,23 @@ class SimpleKeyboard {
 
     // 4. Activation keys (Enter, Space) -> Always handled by the VK
     if (event instanceof KeyboardEvent && (key === 'Enter' || key === ' ' || key === 'Spacebar')) {
-      event.preventDefault(); // prevent form submit or scroll
-      event.stopPropagation();
-      event.stopImmediatePropagation();
+      // built boolean to track if nav is engaged and activeSurface is the keyboard
+      const navEngaged = this.navEngaged && currentOptions.activeSurface === 'keyboard';
 
-      const resolved = this.resolveKey(key, this.navEngaged);
-      if (resolved) {
-        this.handleButtonClicked(resolved, event);
+      if (navEngaged) {
+        event.preventDefault(); // prevent form submit or scroll
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+
+        const resolved = this.resolveKey(key, navEngaged);
+        if (resolved) {
+          this.handleButtonClicked(resolved, event);
+        }
+
+        return; // Skip further processing for activation keys
       }
-
-      return; // Skip further processing for activation keys
     }
+
     // 5. Log the event
     this.logEventType('Keyboard', event);
 
