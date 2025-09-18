@@ -15,11 +15,9 @@ class Demo {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'F9') {
         this.keyboard.setOptions({ activeSurface: 'keyboard' });
-        console.log('[Demo] activeSurface set to keyboard');
       }
       if (e.key === 'F10') {
         this.keyboard.setOptions({ activeSurface: 'editor' });
-        console.log('[Demo] activeSurface set to editor');
       }
     });
 
@@ -47,7 +45,6 @@ class Demo {
       autoFocus: true,
       restoreFocusOnChange: 'content',
       activeSurface: 'editor',
-      debug: true,
     });
 
     // Prevent physical spacebar inserting spaces
@@ -63,10 +60,6 @@ class Demo {
     });
   }
 
-  hasFocus() {
-    console.log('Who has focus?', document.activeElement);
-  }
-
   onChange(input) {
     const inputElement = document.querySelector('.input');
 
@@ -74,8 +67,6 @@ class Demo {
      * Updating input's value
      */
     inputElement.value = input;
-    // Replace space characters with ␣ for debugging
-    const visible = input.replace(/ /g, '␣');
     /**
      * Synchronizing input caret position
      */
@@ -83,7 +74,6 @@ class Demo {
     if (caretPosition !== null) this.setInputCaretPosition(inputElement, caretPosition);
 
     this.keyboard.setInput(input, '_focusRestore');
-    this.hasFocus();
   }
 
   setInputCaretPosition(elem, pos) {

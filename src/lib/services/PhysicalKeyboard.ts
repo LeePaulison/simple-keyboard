@@ -21,16 +21,18 @@ class PhysicalKeyboard {
   shiftActive = false;
   capslockActive = false;
   activeKeys: Set<HTMLElement> = new Set();
+  getNavEngaged: () => boolean;
 
   /**
    * Creates an instance of the PhysicalKeyboard service
    */
-  constructor({ dispatch, getOptions }: PhysicalKeyboardParams) {
+  constructor({ dispatch, getOptions, getNavEngaged }: PhysicalKeyboardParams) {
     /**
      * @type {object} A simple-keyboard instance
      */
     this.dispatch = dispatch;
     this.getOptions = getOptions;
+    this.getNavEngaged = getNavEngaged;
 
     if (this.getOptions() && this.getOptions().layout) {
       this.lastLayout = this.getOptions()?.layout?.default?.[1] || '';
@@ -58,6 +60,13 @@ class PhysicalKeyboard {
 
     if (e.code === 'CapsLock') {
       this.capslockActive = !this.capslockActive;
+    }
+
+    if (this.getNavEngaged() && options.activeSurface === 'keyboard') {
+      // If navEngaged is true and activeSurface is keyboard, do not highlight keys or operate VK
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      return;
     }
 
     const buttonPressed = this.getSimpleKeyboardLayoutKey(e);

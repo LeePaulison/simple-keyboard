@@ -370,6 +370,7 @@ export interface UtilitiesParams {
 export interface PhysicalKeyboardParams {
   getOptions: () => KeyboardOptions;
   dispatch: any;
+  getNavEngaged: () => boolean;
 }
 export interface KeyboardOptions {
   /**
@@ -660,6 +661,7 @@ interface LayoutKeyMapping {
 export interface PhysicalKeyboard {
   getOptions: () => KeyboardOptions;
   dispatch: any;
+  getNavEngaged: () => boolean;
   layoutJSON: Record<string, LayoutKeyMapping> | null;
   lastLayout: string;
   shiftActive: boolean;
@@ -667,7 +669,7 @@ export interface PhysicalKeyboard {
   /**
    * Creates an instance of the PhysicalKeyboard service
    */
-  constructor: ({ dispatch, getOptions }: PhysicalKeyboardParams) => any;
+  constructor: ({ dispatch, getOptions, getNavEngaged }: PhysicalKeyboardParams) => any;
   handleHighlightKeyDown(e: KeyboardEvent): void;
   handleHighlightKeyUp(e: KeyboardEvent): void;
   STANDARD_CODES: Set<string>;

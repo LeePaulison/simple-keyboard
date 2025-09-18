@@ -174,7 +174,6 @@ class SimpleKeyboard {
       preventMouseDownDefault: false,
       enableLayoutCandidates: true,
       excludeFromLayout: {},
-      activeSurface: 'none',
       ...options,
     };
 
@@ -238,6 +237,7 @@ class SimpleKeyboard {
     this.physicalKeyboard = new PhysicalKeyboard({
       dispatch: this.dispatch,
       getOptions: this.getOptions,
+      getNavEngaged: () => this.navEngaged,
     });
 
     /**
@@ -919,13 +919,20 @@ class SimpleKeyboard {
       this.render();
 
       /**
+       * Reset navEngaged when activeSurface is not keyboard
+       */
+      if (options.activeSurface && options.activeSurface !== 'keyboard') {
+        this.navEngaged = false;
+      }
+
+      /**
        * Resume last roved key when switching back to VK
        */
       if (options.activeSurface === 'keyboard') {
         let target: HTMLElement | null = null;
 
         if (this.lastUsedKey) {
-          target = this.keyboardDOM?.querySelector(`[data-skbtn="${this.lastUsedKey}"]`) as HTMLElement;
+          target = this.keyboardDOM?.querySelector(`[data-skbtnuid="${this.lastUsedKey}"]`) as HTMLElement;
         }
 
         if (!target) {
@@ -943,12 +950,34 @@ class SimpleKeyboard {
           this.keyboardDOM?.setAttribute('aria-activedescendant', target.id);
 
           this.handleGetButtonAndAnnounce({
-            key: this.lastUsedKey || target.dataset.skbtn,
+            key: this.lastUsedKey || target.dataset.skbtnuid,
           });
         }
       }
     }
   }
+
+  // Original setOptions without extra logs
+  // setOptions(options = {}): void {
+  //   const changedOptions = this.changedOptions(options);
+  //   this.options = Object.assign(this.options, options);
+
+  //   if (changedOptions.length) {
+  //     if (this.options.debug) {
+  //       console.log('changedOptions', changedOptions);
+  //     }
+
+  //     /**
+  //      * Some option changes require adjustments before re-render
+  //      */
+  //     this.onSetOptions(changedOptions);
+
+  //     /**
+  //      * Rendering
+  //      */
+  //     this.render();
+  //   }
+  // }
 
   /**
    * Detecting changes to non-function options
@@ -1615,7 +1644,7 @@ class SimpleKeyboard {
     const focused = this.keyboardDOM.querySelector('[aria-selected="true"]') as HTMLElement;
 
     // Find the currently focused button
-    if (!focused || !focused.hasAttribute('data-skbtn')) return;
+    if (!focused || !focused.hasAttribute('data-skbtnuid')) return;
 
     // Implement directional logic
     let nextButton: HTMLElement | null = null;
@@ -1637,7 +1666,7 @@ class SimpleKeyboard {
 
     if (nextButton) {
       focused.setAttribute('aria-selected', 'false');
-      this.lastUsedKey = nextButton.getAttribute('data-skbtn') || null;
+      this.lastUsedKey = nextButton.getAttribute('data-skbtnuid') || null;
       nextButton.setAttribute('aria-selected', 'true');
       this.keyboardDOM.setAttribute('aria-activedescendant', nextButton.id);
     }
@@ -2273,6 +2302,27 @@ class SimpleKeyboard {
     return keyboardClasses.join(' ');
   };
 
+  restoreRovingSelection() {
+    if (!this.keyboardDOM) return;
+    let btnUid = null;
+
+    if (this.lastUsedKey) {
+      btnUid = this.lastUsedKey.split('-')[1];
+    }
+
+    let targetButton = this.keyboardDOM.querySelector(`[data-skbtnuid$="${btnUid}"]`) as HTMLElement;
+    console.log('Restoring roving selection to:', this.lastUsedKey, targetButton);
+    if (!targetButton) {
+      targetButton = this.keyboardDOM.querySelector('.hg-button') as HTMLElement;
+    }
+
+    if (targetButton) {
+      this.keyboardDOM.querySelectorAll('.hg-button').forEach((btn) => btn.setAttribute('aria-selected', 'false'));
+      targetButton.setAttribute('aria-selected', 'true');
+      this.keyboardDOM.setAttribute('aria-activedescendant', targetButton.id);
+    }
+  }
+
   /**
    * Renders rows and buttons as per options
    */
@@ -2596,10 +2646,10 @@ class SimpleKeyboard {
         // stable id for key
         buttonDOM.id = `key-${rIndex}-${bIndex}-${button.replace(/\s+/g, '-')}`;
 
-        // Example: If this is the first key, make it focusable
-        if (rIndex === 0 && bIndex === 0) {
-          buttonDOM.setAttribute('aria-selected', 'true');
-        }
+        // // Example: If this is the first key, make it focusable
+        // if (rIndex === 0 && bIndex === 0) {
+        //   buttonDOM.setAttribute('aria-selected', 'true');
+        // }
 
         /**
          * Adding button label to button
@@ -2636,6 +2686,11 @@ class SimpleKeyboard {
      * Appending row to keyboard
      */
     this.keyboardDOM.appendChild(this.keyboardRowsDOM);
+
+    /**
+     * Restore roving selection before onRender
+     */
+    this.restoreRovingSelection();
 
     /**
      * Calling onRender

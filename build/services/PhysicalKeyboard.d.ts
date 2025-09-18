@@ -17,10 +17,11 @@ declare class PhysicalKeyboard {
     shiftActive: boolean;
     capslockActive: boolean;
     activeKeys: Set<HTMLElement>;
+    getNavEngaged: () => boolean;
     /**
      * Creates an instance of the PhysicalKeyboard service
      */
-    constructor({ dispatch, getOptions }: PhysicalKeyboardParams);
+    constructor({ dispatch, getOptions, getNavEngaged }: PhysicalKeyboardParams);
     handleHighlightKeyDown(e: KeyboardEvent): void;
     handleHighlightKeyUp(e: KeyboardEvent): void;
     STANDARD_CODES: Set<string>;

@@ -376,6 +376,7 @@ declare class SimpleKeyboard {
      * getKeyboardClassString
      */
     getKeyboardClassString: (...baseDOMClasses: any[]) => string;
+    restoreRovingSelection(): void;
     /**
      * Renders rows and buttons as per options
      */

@@ -63,6 +63,7 @@ export interface UtilitiesParams {
 export interface PhysicalKeyboardParams {
   getOptions: () => KeyboardOptions;
   dispatch: any;
+  getNavEngaged: () => boolean;
 }
 
 export interface KeyboardOptions {
