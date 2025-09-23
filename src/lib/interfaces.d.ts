@@ -647,6 +647,24 @@ export interface KeyboardOptions {
    * - 'none': Neither is active (disables auto focus restoration)
    */
   activeSurface?: 'editor' | 'keyboard' | 'none';
+
+  /**
+   * Enable Roving
+   * External method to enable roving functionality
+   */
+  enableRoving?: () => void;
+
+  /**
+   * Disable Roving
+   * External method to disable roving functionality
+   */
+  disableRoving?: () => void;
+
+  /**
+   * Check if Roving is active
+   * External method to check if roving functionality is active
+   */
+  isRovingActive?: () => boolean;
 }
 /**
  * Layout Key Mapping Interface

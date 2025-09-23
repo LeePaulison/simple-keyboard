@@ -73,6 +73,15 @@ declare class SimpleKeyboard {
      */
     private ensureAnnouncer;
     /**
+     * Enable Roving
+     */
+    enableRoving(): void;
+    /**
+     * Disable Roving
+     */
+    disableRoving(): void;
+    isRovingActive(): boolean;
+    /**
      * parseParams
      */
     handleParams: (selectorOrOptions?: string | HTMLDivElement | KeyboardOptions, keyboardOptions?: KeyboardOptions) => {
@@ -260,7 +269,9 @@ declare class SimpleKeyboard {
      * Get the Button Element for Live Region announcements
      * Backward-compatible entry point; now internally gated.
      */
-    getButtonAndAnnounce(event: Event): void;
+    getButtonAndAnnounce(event: Event | {
+        key: string;
+    }): void;
     /**
      * WCAG 2.1 Live Region for announcing key focus changes
      * This is used to announce key focus changes for screen readers

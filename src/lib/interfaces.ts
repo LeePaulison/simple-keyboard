@@ -383,4 +383,10 @@ export interface KeyboardOptions {
    * - 'none': Neither is active (disables auto focus restoration)
    */
   activeSurface?: 'editor' | 'keyboard' | 'none';
+
+  enableRoving?: () => void;
+
+  disableRoving?: () => void;
+
+  isRovingActive?: () => boolean;
 }

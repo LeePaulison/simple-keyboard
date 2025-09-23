@@ -312,6 +312,24 @@ class SimpleKeyboard {
   }
 
   /**
+   * Enable Roving
+   */
+  enableRoving(): void {
+    this.navEngaged = true;
+  }
+
+  /**
+   * Disable Roving
+   */
+  disableRoving(): void {
+    this.navEngaged = false;
+  }
+
+  isRovingActive(): boolean {
+    return this.navEngaged && this.options.activeSurface === 'keyboard';
+  }
+
+  /**
    * parseParams
    */
   handleParams = (
@@ -1409,6 +1427,11 @@ class SimpleKeyboard {
         const resolved = this.resolveKey(key, navEngaged);
         if (resolved) {
           this.handleButtonClicked(resolved, event);
+          const target = this.keyboardDOM?.querySelector('.hg-button[aria-selected="true"]') as HTMLElement | null;
+          const keyLabel = target?.getAttribute('data-skbtn');
+          if (keyLabel) {
+            this.getButtonAndAnnounce({ key: keyLabel });
+          }
         }
 
         return; // Skip further processing for activation keys
@@ -1523,14 +1546,17 @@ class SimpleKeyboard {
    * Get the Button Element for Live Region announcements
    * Backward-compatible entry point; now internally gated.
    */
-  getButtonAndAnnounce(event: Event): void {
-    if (!this.isSupportedEvent(event)) return;
-
+  getButtonAndAnnounce(event: Event | { key: string }): void {
     // Check if announcements should be suppressed
     if (this.shouldSuppressAnnouncements()) return;
 
     let pressedKey: string | null = null;
     let buttonLabel: string | null = null;
+
+    // 1. Synthetic key object path
+    if ((event as any)?.key && !(event instanceof KeyboardEvent)) {
+      pressedKey = (event as any).key;
+    }
 
     // 1. KeyboardEvent path
     if (event instanceof KeyboardEvent) {
@@ -2311,7 +2337,6 @@ class SimpleKeyboard {
     }
 
     let targetButton = this.keyboardDOM.querySelector(`[data-skbtnuid$="${btnUid}"]`) as HTMLElement;
-    console.log('Restoring roving selection to:', this.lastUsedKey, targetButton);
     if (!targetButton) {
       targetButton = this.keyboardDOM.querySelector('.hg-button') as HTMLElement;
     }

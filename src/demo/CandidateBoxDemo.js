@@ -42,6 +42,7 @@ class Demo {
       physicalKeyboardHighlight: true,
       physicalKeyboardHighlightPress: true,
       physicalKeyboardHighlightPreventDefault: true,
+      useLiveRegion: true,
       autoFocus: true,
       restoreFocusOnChange: 'content',
       activeSurface: 'editor',
