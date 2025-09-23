@@ -665,6 +665,11 @@ export interface KeyboardOptions {
    * External method to check if roving functionality is active
    */
   isRovingActive?: () => boolean;
+
+  /**
+   * Callback fired when roving is enabled or disabled.
+   */
+  onRovingToggle?: (isActive: boolean) => void;
 }
 /**
  * Layout Key Mapping Interface

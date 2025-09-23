@@ -437,7 +437,9 @@ class Utilities {
     for (const myMethod of Object.getOwnPropertyNames(myClass.prototype)) {
       const excludeMethod = myMethod === 'constructor' || myMethod === 'bindMethods';
       if (!excludeMethod) {
-        instance[myMethod] = instance[myMethod].bind(instance);
+        if (typeof instance[myMethod] === 'function') {
+          instance[myMethod] = instance[myMethod].bind(instance);
+        }
       }
     }
   }

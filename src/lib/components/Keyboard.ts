@@ -68,9 +68,9 @@ class SimpleKeyboard {
     ' ': 'Space',
     Spacebar: 'Space',
   };
-  private announcerEl: HTMLDivElement | null = null;
-  navEngaged = false;
-  lastUsedKey: string | null = null;
+  private _announcerEl: HTMLDivElement | null = null;
+  private _navEngaged = false;
+  private _lastUsedKey: string | null = null;
 
   /**
    * Creates an instance of SimpleKeyboard
@@ -87,7 +87,7 @@ class SimpleKeyboard {
     if (!keyboardDOM) throw new Error('Keyboard root not found');
 
     // Reuse or create announcer; safe before/after attachment
-    this.announcerEl = this.ensureAnnouncer(keyboardDOM);
+    this._announcerEl = this.ensureAnnouncer(keyboardDOM);
 
     /**
      * Initializing Utilities
@@ -237,7 +237,7 @@ class SimpleKeyboard {
     this.physicalKeyboard = new PhysicalKeyboard({
       dispatch: this.dispatch,
       getOptions: this.getOptions,
-      getNavEngaged: () => this.navEngaged,
+      getNavEngaged: () => this._navEngaged,
     });
 
     /**
@@ -264,6 +264,19 @@ class SimpleKeyboard {
      */
     this.modules = {};
     this.loadModules();
+  }
+
+  get navEngaged() {
+    return this._navEngaged;
+  }
+
+  private setNavEngaged(value: boolean) {
+    if (this._navEngaged !== value) {
+      this._navEngaged = value;
+      if (typeof this.options.onRovingToggle === 'function') {
+        this.options.onRovingToggle(value);
+      }
+    }
   }
 
   /**
@@ -315,14 +328,14 @@ class SimpleKeyboard {
    * Enable Roving
    */
   enableRoving(): void {
-    this.navEngaged = true;
+    this.setNavEngaged(true);
   }
 
   /**
    * Disable Roving
    */
   disableRoving(): void {
-    this.navEngaged = false;
+    this.setNavEngaged(false);
   }
 
   isRovingActive(): boolean {
@@ -517,7 +530,7 @@ class SimpleKeyboard {
    * @param  {string} button The button's layout name.
    */
   handleButtonClicked(button: string, e?: KeyboardHandlerEvent): void {
-    const { inputName = this.defaultName, debug } = this.options;
+    const { inputName = this.defaultName } = this.options;
     /**
      * Ignoring placeholder buttons
      */
@@ -940,7 +953,7 @@ class SimpleKeyboard {
        * Reset navEngaged when activeSurface is not keyboard
        */
       if (options.activeSurface && options.activeSurface !== 'keyboard') {
-        this.navEngaged = false;
+        this.setNavEngaged(false);
       }
 
       /**
@@ -949,8 +962,8 @@ class SimpleKeyboard {
       if (options.activeSurface === 'keyboard') {
         let target: HTMLElement | null = null;
 
-        if (this.lastUsedKey) {
-          target = this.keyboardDOM?.querySelector(`[data-skbtnuid="${this.lastUsedKey}"]`) as HTMLElement;
+        if (this._lastUsedKey) {
+          target = this.keyboardDOM?.querySelector(`[data-skbtnuid="${this._lastUsedKey}"]`) as HTMLElement;
         }
 
         if (!target) {
@@ -968,7 +981,7 @@ class SimpleKeyboard {
           this.keyboardDOM?.setAttribute('aria-activedescendant', target.id);
 
           this.handleGetButtonAndAnnounce({
-            key: this.lastUsedKey || target.dataset.skbtnuid,
+            key: this._lastUsedKey || target.dataset.skbtnuid,
           });
         }
       }
@@ -1425,6 +1438,7 @@ class SimpleKeyboard {
         event.stopImmediatePropagation();
 
         const resolved = this.resolveKey(key, navEngaged);
+        console.log('Resolved key for activation:', resolved);
         if (resolved) {
           this.handleButtonClicked(resolved, event);
           const target = this.keyboardDOM?.querySelector('.hg-button[aria-selected="true"]') as HTMLElement | null;
@@ -1612,16 +1626,16 @@ class SimpleKeyboard {
    */
 
   announceLiveRegion(keyLabel: string, context = 'pressed'): void {
-    if (!this.options.useLiveRegion || !this.announcerEl) return;
+    if (!this.options.useLiveRegion || !this._announcerEl) return;
 
     if (this.ariaLiveTimer) clearTimeout(this.ariaLiveTimer);
 
     this.ariaLiveTimer = setTimeout(() => {
-      if (this.announcerEl) {
-        this.announcerEl.textContent = '';
+      if (this._announcerEl) {
+        this._announcerEl.textContent = '';
         requestAnimationFrame(() => {
-          if (this.announcerEl) {
-            this.announcerEl.textContent = `Key ${keyLabel} ${context}`;
+          if (this._announcerEl) {
+            this._announcerEl.textContent = `Key ${keyLabel} ${context}`;
           }
         });
       }
@@ -1692,12 +1706,12 @@ class SimpleKeyboard {
 
     if (nextButton) {
       focused.setAttribute('aria-selected', 'false');
-      this.lastUsedKey = nextButton.getAttribute('data-skbtnuid') || null;
+      this._lastUsedKey = nextButton.getAttribute('data-skbtnuid') || null;
       nextButton.setAttribute('aria-selected', 'true');
       this.keyboardDOM.setAttribute('aria-activedescendant', nextButton.id);
     }
 
-    this.navEngaged = true;
+    this.setNavEngaged(true);
   }
 
   /**
@@ -1984,7 +1998,7 @@ class SimpleKeyboard {
     /**
      * Reset navEngaged flag
      */
-    this.navEngaged = false;
+    this.setNavEngaged(false);
   }
 
   /**
@@ -2094,7 +2108,7 @@ class SimpleKeyboard {
     }
 
     //Initialize Announcer
-    this.announcerEl = this.ensureAnnouncer(this.keyboardDOM);
+    this._announcerEl = this.ensureAnnouncer(this.keyboardDOM);
 
     /**
      * setEventListeners
@@ -2159,7 +2173,7 @@ class SimpleKeyboard {
   onRender() {
     if (typeof this.options.onRender === 'function') this.options.onRender(this);
 
-    this.announcerEl = this.ensureAnnouncer(this.keyboardDOM);
+    this._announcerEl = this.ensureAnnouncer(this.keyboardDOM);
   }
 
   /**
@@ -2332,8 +2346,8 @@ class SimpleKeyboard {
     if (!this.keyboardDOM) return;
     let btnUid = null;
 
-    if (this.lastUsedKey) {
-      btnUid = this.lastUsedKey.split('-')[1];
+    if (this._lastUsedKey) {
+      btnUid = this._lastUsedKey.split('-')[1];
     }
 
     let targetButton = this.keyboardDOM.querySelector(`[data-skbtnuid$="${btnUid}"]`) as HTMLElement;

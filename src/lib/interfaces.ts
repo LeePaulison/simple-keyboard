@@ -384,9 +384,23 @@ export interface KeyboardOptions {
    */
   activeSurface?: 'editor' | 'keyboard' | 'none';
 
+  /**
+   * Enables roving (i.e. keyboard arrow navigation).
+   */
   enableRoving?: () => void;
 
+  /**
+   * Disables roving (i.e. keyboard arrow navigation).
+   */
   disableRoving?: () => void;
 
+  /**
+   * Returns whether roving is currently active.
+   */
   isRovingActive?: () => boolean;
+
+  /**
+   * Callback fired when roving is enabled or disabled.
+   */
+  onRovingToggle?: (isActive: boolean) => void;
 }

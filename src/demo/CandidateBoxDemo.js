@@ -3,28 +3,41 @@ import './css/CandidateBoxDemo.css';
 
 const setDOM = () => {
   document.querySelector('body').innerHTML = `
-    <input class="input" placeholder="Tap on the virtual keyboard to start" />
+    <textarea class="input" placeholder="Tap on the virtual keyboard to start" cols="111" rows="10" wrap="soft" resize="none"></textarea>
+    <div class="instructions">F8: Focus editor | F9: Focus keyboard</div>
+    <div class="roving-instructions"><strong>Physical Keyboard instructions:</strong><br/>Use the physical keyboard to type.</div>
     <div class="simple-keyboard"></div>
   `;
 };
 
 class Demo {
+  rovingInstructions;
   constructor() {
     setDOM();
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'F9') {
-        this.keyboard.setOptions({ activeSurface: 'keyboard' });
-      }
-      if (e.key === 'F10') {
-        this.keyboard.setOptions({ activeSurface: 'editor' });
-      }
-    });
 
     /**
      * Update simple-keyboard when input is changed directly
      */
     const inputEl = document.querySelector('.input');
+    inputEl.style.borderRadius = '.5rem';
+    inputEl.style.padding = '.5rem';
+    inputEl.style.outline = '2px solid #0a1827ff';
+    const keyboardEl = document.querySelector('.simple-keyboard');
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F9') {
+        this.keyboard.setOptions({ activeSurface: 'keyboard' });
+        keyboardEl.style.outline = '2px solid #0a1827ff';
+        inputEl.style.outline = 'none';
+      }
+      if (e.key === 'F8') {
+        this.keyboard.setOptions({ activeSurface: 'editor' });
+        inputEl.style.outline = '2px solid #0a1827ff';
+        inputEl.style.outlineOffset = '-2px';
+        inputEl.style.borderRadius = '.5rem';
+        keyboardEl.style.outline = 'none';
+      }
+    });
 
     /**
      * Demo Start
@@ -46,6 +59,10 @@ class Demo {
       autoFocus: true,
       restoreFocusOnChange: 'content',
       activeSurface: 'editor',
+      onRovingToggle: (isActive) => {
+        this.setRovingInstructions();
+      },
+      newLineOnEnter: true,
     });
 
     // Prevent physical spacebar inserting spaces
@@ -61,9 +78,20 @@ class Demo {
     });
   }
 
+  setRovingInstructions() {
+    console.log('Roving tabindex is active:', this.keyboard.isRovingActive());
+    this.rovingInstructions = document.querySelector('.roving-instructions');
+    this.rovingInstructions.innerHTML = this.keyboard.isRovingActive()
+      ? `
+      <strong>Roving tabindex instructions:</strong><br/>
+      Use the arrow keys to navigate between elements.
+    `
+      : '<strong>Physical Keyboard instructions:</strong><br/>Use the physical keyboard to type.';
+  }
+
   onChange(input) {
     const inputElement = document.querySelector('.input');
-
+    console.log('Input changed', input);
     /**
      * Updating input's value
      */

@@ -59,14 +59,16 @@ declare class SimpleKeyboard {
     MODIFIER_KEYS: Set<string>;
     NAMED_KEYS_TO_ANNOUNCE: Set<string>;
     NAMED_READABLE: Record<string, string>;
-    private announcerEl;
-    navEngaged: boolean;
-    lastUsedKey: string | null;
+    private _announcerEl;
+    private _navEngaged;
+    private _lastUsedKey;
     /**
      * Creates an instance of SimpleKeyboard
      * @param {Array} selectorOrOptions If first parameter is a string, it is considered the container class. The second parameter is then considered the options object. If first parameter is an object, it is considered the options object.
      */
     constructor(selectorOrOptions?: string | HTMLDivElement | KeyboardOptions, keyboardOptions?: KeyboardOptions);
+    get navEngaged(): boolean;
+    private setNavEngaged;
     /**
      * Accessibility Announcer
      * This module is responsible for announcing changes in the keyboard state to assistive technologies.
