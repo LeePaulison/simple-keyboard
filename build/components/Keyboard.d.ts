@@ -61,6 +61,7 @@ declare class SimpleKeyboard {
     NAMED_READABLE: Record<string, string>;
     private _announcerEl;
     private _navEngaged;
+    private _rovingLocked;
     private _lastUsedKey;
     /**
      * Creates an instance of SimpleKeyboard
@@ -82,6 +83,13 @@ declare class SimpleKeyboard {
      * Disable Roving
      */
     disableRoving(): void;
+    /**
+     * Clear Roving Lock
+     */
+    clearRovingOverride(): void;
+    /**
+     * Check if Roving is Active
+     */
     isRovingActive(): boolean;
     /**
      * parseParams

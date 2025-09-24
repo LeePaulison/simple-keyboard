@@ -661,6 +661,12 @@ export interface KeyboardOptions {
   disableRoving?: () => void;
 
   /**
+   * Clears any active roving lock.
+   * External method to clear roving lock
+   */
+  clearRovingOverride?: () => void;
+
+  /**
    * Check if Roving is active
    * External method to check if roving functionality is active
    */

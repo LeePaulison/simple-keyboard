@@ -70,6 +70,7 @@ class SimpleKeyboard {
   };
   private _announcerEl: HTMLDivElement | null = null;
   private _navEngaged = false;
+  private _rovingLocked: boolean | null = null;
   private _lastUsedKey: string | null = null;
 
   /**
@@ -328,18 +329,52 @@ class SimpleKeyboard {
    * Enable Roving
    */
   enableRoving(): void {
-    this.setNavEngaged(true);
+    this._rovingLocked = false;
   }
 
   /**
    * Disable Roving
    */
   disableRoving(): void {
-    this.setNavEngaged(false);
+    this._rovingLocked = true;
   }
 
+  /**
+   * Clear Roving Lock
+   */
+  clearRovingOverride(): void {
+    this._rovingLocked = null;
+  }
+
+  /**
+   * Check if Roving is Active
+   */
   isRovingActive(): boolean {
-    return this.navEngaged && this.options.activeSurface === 'keyboard';
+    const currentOptions = this.getOptions();
+
+    if (currentOptions.debug) {
+      console.log('Nav Engaged:', this.navEngaged);
+      console.log('Active Surface:', currentOptions.activeSurface);
+      console.log('Roving Locked:', this._rovingLocked);
+    }
+
+    let result: boolean;
+
+    if (this._rovingLocked === true) {
+      result = false; // forced off
+    } else if (this._rovingLocked === false) {
+      // explicit enable, but still must be on keyboard surface
+      result = this.navEngaged && this.options.activeSurface === 'keyboard';
+    } else {
+      // null: no external override, just internal behaviour
+      result = this.navEngaged && this.options.activeSurface === 'keyboard';
+    }
+
+    if (currentOptions.debug) {
+      console.log('Is Roving Active Result:', result);
+    }
+
+    return result;
   }
 
   /**
@@ -1429,8 +1464,8 @@ class SimpleKeyboard {
 
     // 4. Activation keys (Enter, Space) -> Always handled by the VK
     if (event instanceof KeyboardEvent && (key === 'Enter' || key === ' ' || key === 'Spacebar')) {
-      // built boolean to track if nav is engaged and activeSurface is the keyboard
-      const navEngaged = this.navEngaged && currentOptions.activeSurface === 'keyboard';
+      // built boolean to track if nav is engaged and activeSurface is the keyboard and roving is allowed
+      const navEngaged = this.isRovingActive();
 
       if (navEngaged) {
         event.preventDefault(); // prevent form submit or scroll
