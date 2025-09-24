@@ -1,6 +1,6 @@
 {
   "name": "@aac/simple-keyboard",
-  "version": "1.1.0",
+  "version": "1.1.0a.1",
   "description": "508a-compliant internal fork of simple-keyboard by Francisco Hodge",
   "private": true,
   "main": "build/index.js",
@@ -15,8 +15,7 @@
     "build-modern": "webpack --config webpack.config.modern.js",
     "build-modern-esm": "webpack --config webpack.config.modern_esm.js",
     "test": "jest --silent",
-    "coverage": "npm run test -- --coverage",
-    "prepare": "npm run build"
+    "coverage": "npm run test -- --coverage"
   },
   "repository": {
     "type": "git",
@@ -125,5 +124,11 @@
       "jsx",
       "node"
     ]
-  }
+  },
+  "files": [
+    "build",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ]
 }

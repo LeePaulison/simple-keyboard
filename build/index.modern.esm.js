@@ -1,6 +1,6 @@
 /*!
  * 
- *   @aac/simple-keyboard v1.1.0 (index.modern.esm.js - Modern Browsers bundle, ESM output)
+ *   @aac/simple-keyboard v1.1.0a.1 (index.modern.esm.js - Modern Browsers bundle, ESM output)
  *   https://github.com/hodgef/simple-keyboard
  *
  *   NOTE: This modern browsers bundle (index.modern.esm.js) removes all polyfills
