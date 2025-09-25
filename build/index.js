@@ -1,6 +1,6 @@
 /*!
  * 
- *   @aac/simple-keyboard v1.1.0
+ *   @aac/simple-keyboard v1.1.1-alpha.1
  *   https://github.com/hodgef/simple-keyboard
  *
  *   Copyright (c) Francisco Hodge (https://github.com/hodgef) and project contributors.
