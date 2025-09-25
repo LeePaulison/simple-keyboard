@@ -1,5 +1,8 @@
 import Keyboard from '../lib';
 import './css/CandidateBoxDemo.css';
+import korean from 'simple-keyboard-layouts/build/layouts/korean';
+
+console.log('Korean layout', korean);
 
 const setDOM = () => {
   document.querySelector('body').innerHTML = `
@@ -27,11 +30,13 @@ class Demo {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'F9') {
         this.keyboard.setOptions({ activeSurface: 'keyboard' });
+        this.keyboard.enableRoving();
         keyboardEl.style.outline = '2px solid #0a1827ff';
         inputEl.style.outline = 'none';
       }
       if (e.key === 'F8') {
         this.keyboard.setOptions({ activeSurface: 'editor' });
+        this.keyboard.disableRoving();
         inputEl.style.outline = '2px solid #0a1827ff';
         inputEl.style.outlineOffset = '-2px';
         inputEl.style.borderRadius = '.5rem';
@@ -45,13 +50,11 @@ class Demo {
     this.keyboard = new Keyboard({
       onChange: (input) => this.onChange(input),
       onKeyPress: (button) => this.onKeyPress(button),
+      layout: korean.layout,
       useMouseEvents: true,
       preventMouseDownDefault: true,
       layoutCandidatesPageSize: 15,
-      layoutCandidates: {
-        ni: '你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼 你 尼',
-        hao: '好 号',
-      },
+      layoutCandidates: { ...korean.layoutCandidates },
       physicalKeyboardHighlight: true,
       physicalKeyboardHighlightPress: true,
       physicalKeyboardHighlightPreventDefault: true,
@@ -63,6 +66,7 @@ class Demo {
         this.setRovingInstructions();
       },
       newLineOnEnter: true,
+      debug: true,
     });
 
     // Prevent physical spacebar inserting spaces
@@ -123,8 +127,9 @@ class Demo {
 
   handleShift() {
     const currentLayout = this.keyboard.options.layoutName;
+    console.log('currentLayout', currentLayout);
     const shiftToggle = currentLayout === 'default' ? 'shift' : 'default';
-
+    console.log('shiftToggle', shiftToggle);
     this.keyboard.setOptions({
       layoutName: shiftToggle,
     });

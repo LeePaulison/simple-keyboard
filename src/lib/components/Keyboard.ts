@@ -337,6 +337,11 @@ class SimpleKeyboard {
    */
   disableRoving(): void {
     this._rovingLocked = true;
+    const currentOptions = this.getOptions();
+
+    if (currentOptions.debug) {
+      console.log('[disableRoving] Disabling Roving:', this._rovingLocked);
+    }
   }
 
   /**
@@ -1431,10 +1436,10 @@ class SimpleKeyboard {
    * Event Handler: KeyDown
    */
   handleKeyDown(event: KeyboardHandlerEvent): void {
-    // 1. CandidateBox takes over completely when open
-    if (CandidateBox.isOpen) {
-      return;
-    }
+    // // 1. CandidateBox takes over completely when open
+    // if (CandidateBox.isOpen) {
+    //   return;
+    // }
 
     // Get current options (for dynamic option changes)
     const currentOptions = this.getOptions();
@@ -1684,10 +1689,12 @@ class SimpleKeyboard {
     if (!this.keyboardDOM?.offsetParent) return;
     if (CandidateBox.isOpen) return;
 
+    this.setNavEngaged(true);
+
     const currentOptions = this.getOptions();
 
     if (currentOptions.debug) {
-      console.log('Current Options:', currentOptions);
+      console.log('[handleInternalKeyNav] Current Options:', currentOptions);
     }
 
     if (currentOptions.debug) {
@@ -1697,7 +1704,10 @@ class SimpleKeyboard {
         'Active Surface:',
         currentOptions.activeSurface
       );
+      console.log('[handleInternalKeyNav] Nav Engaged:', this.navEngaged);
+      console.log('[handleInternalKeyNav] Is Roving Active:', this.isRovingActive());
     }
+    if (!this.isRovingActive()) return; // Roving not active or locked
 
     // Gate arrow key handling to when keyboard is not active surface
     if (currentOptions.activeSurface !== 'keyboard') return;
@@ -1745,8 +1755,6 @@ class SimpleKeyboard {
       nextButton.setAttribute('aria-selected', 'true');
       this.keyboardDOM.setAttribute('aria-activedescendant', nextButton.id);
     }
-
-    this.setNavEngaged(true);
   }
 
   /**
